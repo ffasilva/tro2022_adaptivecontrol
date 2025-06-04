@@ -13,7 +13,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: ['ubuntu-24.04', 'macos-latest', 'ubuntu-24.04-arm']
+        os: ['ubuntu-22.04', 'macos-latest', 'ubuntu-22.04-arm']
         python-version: ['3.10', '3.11', '3.12', '3.13']
 
     permissions:
@@ -24,10 +24,10 @@ jobs:
     - name: init submodules
       run: git submodule update --init --recursive
     - name: configure (Ubuntu)
-      if: startsWith(matrix.os,'ubuntu-22.04')
-      run: sudo apt-get install libeigen3-dev
+      if: startsWith(matrix.os,'ubuntu')
+      run: sudo apt-get install libeigen3-dev libboost-dev libzmq3-dev
     - name: configure (macos)
-      if: matrix.os == 'macos-13'
+      if: startsWith(matrix.os,'macos')
       run: brew install eigen
     - name: Make test executable
       run: |
@@ -40,7 +40,7 @@ jobs:
         cd ..
 
     - name: Rename wheel (MacOS only)
-      if: matrix.os == 'macos-latest'
+      if: startsWith(matrix.os,'macos')
       run: |
         brew install rename
         cd python_wrapper/dist
@@ -51,7 +51,7 @@ jobs:
         cd ..
         cd ..
     - name: Rename wheel (Ubuntu Only)
-      if: startsWith(matrix.os,'ubuntu-22.04')
+      if: startsWith(matrix.os,'ubuntu')
       run: |
         sudo apt install rename
         cd python_wrapper/dist
