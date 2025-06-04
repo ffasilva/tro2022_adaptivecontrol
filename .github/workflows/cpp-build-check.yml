@@ -20,7 +20,7 @@ jobs:
       run: git submodule update --init --recursive
     - name: configure (Ubuntu)
       if: matrix.os != 'macos-13' 
-      run: sudo apt install libeigen3-dev
+      run: sudo apt-get install libeigen3-dev
     - name: configure (macos)
       if: matrix.os == 'macos-13' 
       run: brew install eigen
