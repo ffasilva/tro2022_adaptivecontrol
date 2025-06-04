@@ -25,6 +25,10 @@ jobs:
       run: |
        git submodule update --init --recursive
        git fetch --prune --unshallow
+    - name: Set up Python ${{ matrix.python-version }} (Github Hosted VMs)
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python-version }}
     - name: configure (Ubuntu)
       if: startsWith(matrix.os,'ubuntu')
       run: |
