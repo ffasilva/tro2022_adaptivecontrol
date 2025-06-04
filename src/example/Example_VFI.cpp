@@ -1,5 +1,5 @@
 /**
-(C) Copyright 2020-2023 Murilo Marques Marinho (www.murilomarinho.info)
+(C) Copyright 2020-2025 Murilo Marques Marinho (www.murilomarinho.info)
 
 This file is part of adaptive_control_example.
 
@@ -63,7 +63,7 @@ void Example_VFI::initialize()
 {
     //Reference pose is desired
     DQ x_ref(1);
-    if (cs_reference_name_.empty()) {
+    if (!cs_reference_name_.empty()) {
         x_ref = vi_->get_object_pose(cs_reference_name_);
     }
 
