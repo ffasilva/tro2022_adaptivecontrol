@@ -39,8 +39,8 @@ pybind11_add_module(_core MODULE
 # CMAKE was not passing BUILD_SHARED_LIBS nicely to the add_subdirectory.
 # https://thatonegamedev.com/cpp/cmake/how-to-manage-dependencies-with-cmake/
 set(BUILD_SHARED_LIBS FALSE CACHE BOOL "x" FORCE)
-add_subdirectory(cpp_version)
 add_subdirectory(dqrobotics_python/cpp)
+add_subdirectory(cpp_version)
 add_subdirectory(submodules/qpOASES)
 
 target_link_libraries(_core PRIVATE adaptive_control dqrobotics qpOASES)
