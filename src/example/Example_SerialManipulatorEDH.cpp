@@ -1040,5 +1040,13 @@ MatrixXd Example_SerialManipulatorEDH::raw_pose_jacobian_derivative(const Vector
     throw std::runtime_error("NOT IMPLEMENTED");
 }
 
+/**
+ * Gets the supported joint types.
+ * @return a std::vector<DQ_JointType> of the supported joint types.
+ */
+std::vector<DQ_JointType> Example_SerialManipulatorEDH::get_supported_joint_types() const {
+    return {DQ_JointType::REVOLUTE, DQ_JointType::PRISMATIC};
+}
+
 
 

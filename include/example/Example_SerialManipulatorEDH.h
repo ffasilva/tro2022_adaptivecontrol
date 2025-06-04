@@ -116,8 +116,8 @@ public:
 
     DQ get_base_frame() const;
     std::vector<Example_ParameterSpaceEDH::Example_Parameter> get_base_parameters() const;
-    void set_base_frame(const std::vector<Example_ParameterSpaceEDH::Example_Parameter> &base_parameters);
     void set_base_frame(const DQ& base);
+    void set_base_frame(const std::vector<Example_ParameterSpaceEDH::Example_Parameter> &base_parameters);
 
     DQ get_effector_frame() const;
     std::vector<Example_ParameterSpaceEDH::Example_Parameter> get_effector_parameters() const;
@@ -164,6 +164,7 @@ public:
     MatrixXd pose_jacobian(const VectorXd& joint_values, const int& to_ith_link) const override;
     MatrixXd pose_jacobian (const VectorXd& joint_values) const override;
     int get_dim_configuration_space() const override;
+    std::vector<DQ_JointType> get_supported_joint_types() const override;
 
     //NOT IMPLEMENTED
     MatrixXd pose_jacobian_derivative(const VectorXd &q, const VectorXd &q_dot, const int &to_ith_link) const override;
