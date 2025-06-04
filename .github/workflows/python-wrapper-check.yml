@@ -63,7 +63,7 @@ jobs:
         sudo apt install rename
         cd python_wrapper/dist
         ls -lah
-        rename 's/linux/manylinux1/' *
+        rename 's/linux/manylinux2014/' *
         cd ..
         cd ..
     - name: Publish to PyPi
