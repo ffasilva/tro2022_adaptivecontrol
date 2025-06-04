@@ -29,3 +29,6 @@
 [submodule "python_wrapper/dqrobotics_python"]
 	path = python_wrapper/dqrobotics_python
 	url = https://github.com/dqrobotics/python.git
+[submodule "python_wrapper/dqrobotics_python_interface_coppeliasim_zmq"]
+	path = python_wrapper/dqrobotics_python_interface_coppeliasim_zmq
+	url = git@github.com:dqrobotics/python-interface-coppeliasim-zmq.git
