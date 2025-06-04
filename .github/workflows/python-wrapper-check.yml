@@ -25,7 +25,9 @@ jobs:
       run: git submodule update --init --recursive
     - name: configure (Ubuntu)
       if: startsWith(matrix.os,'ubuntu')
-      run: sudo apt-get install libeigen3-dev libboost-dev libzmq3-dev
+      run: |
+       sudo apt-get update
+       sudo apt-get install libeigen3-dev libboost-dev libzmq3-dev
     - name: configure (macos)
       if: startsWith(matrix.os,'macos')
       run: brew install eigen
@@ -38,7 +40,6 @@ jobs:
         cd python_wrapper
         python3 setup.py bdist_wheel
         cd ..
-
     - name: Rename wheel (MacOS only)
       if: startsWith(matrix.os,'macos')
       run: |
