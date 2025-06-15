@@ -1,8 +1,8 @@
 # Adaptive Constrained Kinematic Control using Partial or Complete Task-Space Measurements
 
-# Python Users
+## Python
 
-## venv
+### venv
 
 ```commandline
     python3 -m venv venv
@@ -11,14 +11,14 @@
     python3 -m pip install marinholab-papers-tro2022-adaptivecontrol
 ```
 
-## When you cannot use a venv (e.g. ROS2)
+### When you cannot use a venv (e.g. ROS2)
 
 ```commandline
     python3 -m pip install dqrobotics --pre --break-system-packages
     python3 -m pip install marinholab-papers-tro2022-adaptivecontrol --break-system-packages
 ```
 
-# Reference
+## Reference
 
 Sample code and minimal example for [our TRO2022 paper](https://doi.org/10.1109/TRO.2022.3181047).
 
@@ -36,7 +36,7 @@ Sample code and minimal example for [our TRO2022 paper](https://doi.org/10.1109/
 }
 ```
 
-# Standalone Example
+## Standalone Example
 
 - The red object represents the estimated robot, initially very wrong **on purpose** to evaluate the adaptation.
 - The estimation usually converges within a few seconds using measurements from a simulated sensor.
@@ -45,16 +45,16 @@ Sample code and minimal example for [our TRO2022 paper](https://doi.org/10.1109/
 
 https://github.com/mmmarinho/tro2022_adaptivecontrol/assets/46012516/2abe0b0b-6e48-46e9-9a86-061ba013b355
 
-# Usage 
+## Usage 
 
-## Download & extract the standalone version (only do this once)
+### Download & extract the standalone version (only do this once)
 ```bash
 cd ~
 sudo apt install curl jq -y
 wget $(curl -sL https://api.github.com/repos/mmmarinho/tro2022_adaptivecontrol/releases/latest | jq -r '.assets[].browser_download_url')
 tar -xvf tro2022_adaptivecontrol_example.tar.xz
 ```
-## Running
+### Running
 
 1. Open the example scene, namely `tro2022_adaptivecontrol_example/TRO2022_MarinhoAdorno_ReferenceScene.ttt` on CoppeliaSim.
 2. Run
@@ -62,7 +62,7 @@ tar -xvf tro2022_adaptivecontrol_example.tar.xz
 cd ~/tro2022_adaptivecontrol_example
 ./run_example.sh
 ```
-## Troubleshooting
+### Troubleshooting
 
 If you have the error below when running the pre-compiled example, please use `Ubuntu 22.04` or later.
 
@@ -74,7 +74,7 @@ bin/adaptive_control_example: /lib/x86_64-linux-gnu/libstdc++.so.6: version GLIB
 bin/adaptive_control_example: /lib/x86_64-linux-gnu/libc.so.6: version `GLIBC_2.34' not found (required by lib/libdqrobotics-interface-vrep.so)
 ```
 
-# Known limitations *of this example*/*TODO* list/*Extra info*
+## Known limitations *of this example*/*TODO* list/*Extra info*
 
 - The stopping criterion is elapsed time, so it might not converge for all initial parameters.
 - The initial convergence to measurements mentioned in the paper *TODO* for this example.
@@ -85,9 +85,9 @@ The robot model in CoppeliaSim is for visualization only.
 - A different solver was used in the paper's experiments, in this example we use an open-source solver, so the behavior might be somewhat different.
 - The final target position is, **ON PURPOSE**, chosen as somewhere the robot cannot reach. It serves to show that even in such case the robot does not collide with the environment.
 
-# Build from source
+## Build from source
 
-## Just in case
+### Ubuntu
 
 ```bash
 sudo apt install g++ cmake git libeigen3-dev
@@ -98,7 +98,7 @@ sudo apt install g++ cmake git libeigen3-dev
 brew install cmake eigen cppzmq boost
 ```
 
-## Download the repo
+### Download the repo
 
 ```bash
 cd ~
@@ -107,7 +107,7 @@ cd git
 git clone https://github.com/mmmarinho/tro2022_adaptivecontrol.git --recursive
 ```
 
-## Build
+### Build
 
 With all dependencies correctly configured,
 
@@ -117,7 +117,7 @@ chmod +x .build.sh
 ./.build.sh
 ```
 
-# Running
+## Running
 
 1. Open the example scene, namely `TRO2022_MarinhoAdorno_ReferenceScene.ttt` on CoppeliaSim.
 2. Run
@@ -127,7 +127,7 @@ chmod +x .run.sh
 ./.run.sh
 ```
 
-# Example console output of the results
+## Example console output of the results
 
 Running on an 8 core Ubuntu VM.
 
@@ -150,7 +150,7 @@ Reference timeout for xd1
   Final measurement translation error norm 0.001836 (in meters).
 ```
 
-# Tested on
+## Tested on
 
 - Ubuntu 22.04 `5.19.0-41-generic #42~22.04.1-Ubuntu SMP PREEMPT_DYNAMIC Tue Apr 18 17:40:00 UTC 2 x86_64 x86_64 x86_64 GNU/Linux`
 - g++ --version `g++ (Ubuntu 11.3.0-1ubuntu1~22.04.1) 11.3.0`
@@ -161,38 +161,7 @@ Reference timeout for xd1
 - qpOASES as shown in the submodule information.
 - sas_core as shown in the submodule information.
 
-# Python binding installation
+## Changelog
 
-All dependencies **MUST** be installed as system-wide packages. Also
-
-```console
-sudo apt install pybind11-dev
-```
-
-## Supposing there is a venv installed as
-
-```console
-~/git/tro2022_adaptivecontrol
-python3 -m venv venv
-```
-
-## Once
-
-At the root of this directory
-
-```console
-~/git/tro2022_adaptivecontrol
-source venv/bin/activate
-python3 -m pip install ./python_wrapper
-```
-
-## Using it
-
-```console
-python3
->>> from adaptive_control_example import *
-```
-
-# Changelog
-
-- 2025.05. Updating code to work with `DQ_CoppeliaSimInterfaceZMQ`. 
+- 2025.05. Updating code to work with `DQ_CoppeliaSimInterfaceZMQ`.
+- 2025.06. Removed Python wrapper instructions now that it's available via PyPI.
