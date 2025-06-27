@@ -77,7 +77,10 @@ PYBIND11_MODULE(_core, m) {
                  <const std::shared_ptr<Example_SerialManipulatorEDH>&,
                  const Example_SimulationParameters &
                  >())
-            .def("compute_setpoint_control_signal",&Example_AdaptiveController::compute_setpoint_control_signal,"");
+            .def("compute_setpoint_control_signal",&Example_AdaptiveController::compute_setpoint_control_signal,"")
+            .def("set_control_objective",&Example_AdaptiveController::set_control_objective,"")
+            .def("set_primitive_to_effector",&Example_AdaptiveController::set_primitive_to_effector,"");
+
 
     /// "example/Example_AdaptiveController.h"
 

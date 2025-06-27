@@ -111,6 +111,7 @@ std::tuple<VectorXd,double> closest_invariant_error(const DQ& x, const DQ& xd, c
         return {vec4(x-xd),1};
     }
     case Example_MeasureSpace::Pose:
+    {
         //Address double cover in pose space
         const double ex_1_norm       = vec8(conj(x)*xd - 1).norm();
         const double ex_1minus_norm  = vec8(conj(x)*xd + 1).norm();
@@ -128,7 +129,55 @@ std::tuple<VectorXd,double> closest_invariant_error(const DQ& x, const DQ& xd, c
         }
         return {vec8(ex),invariant};
     }
+    }
     throw std::runtime_error("Not supposed to be reachable");
+}
+
+
+/*
+    get the error between the desired target primitive (xd, in world frame) and the primitive (primitive_, in end-effector frame)
+    x:  pose of the robot, wrt world frame
+    xd: desired objective pose of the objective
+    control_objective_: type of the objective
+    primitive_: expression of the control objective, can be a line, plane, or pose. wrt robot end-effector
+*/
+std::tuple<VectorXd,double> closest_invariant_primitive_error(const DQ& x, const DQ& xd, const ControlObjective& control_objective_, const DQ& primitive_)
+{
+    switch(control_objective_)
+    {
+    case ControlObjective::None:
+        throw std::runtime_error("None is not a valid ControlObjective");
+    case ControlObjective::Pose:
+    {
+        //Address double cover in pose space
+        const double ex_1_norm       = vec8(conj(x)*xd - 1).norm();
+        const double ex_1minus_norm  = vec8(conj(x)*xd + 1).norm();
+        DQ ex;
+        double invariant;
+        if(ex_1_norm<ex_1minus_norm)
+        {
+            ex = conj(x)*xd - 1;
+            invariant = -1;
+        }
+        else
+        {
+            ex = conj(x)*xd + 1;
+            invariant = +1;
+        }
+        return {vec8(ex),invariant};
+    }
+    case ControlObjective::Line:
+    {
+        DQ ex = Ad(x, primitive_) - xd;          //  w r t:  world frame
+        return {vec8(ex),1};
+    }
+    case ControlObjective::Plane:
+    {
+        DQ ex = Adsharp(x, primitive_) - xd;          //  w r t:  world frame
+        return {vec8(ex),1};
+    }
+    }
+    throw std::runtime_error("Not supposed to be reachable / not supported");
 }
 
 /**
@@ -173,7 +222,7 @@ std::tuple<VectorXd, VectorXd, VectorXd, VectorXd, DQ> Example_AdaptiveControlle
     const DQ x_hat = robot_->fkm(q);
     double x_invariant;
     VectorXd x_tilde;
-    std::tie(x_tilde, x_invariant) = closest_invariant_error(x_hat, xd, Example_MeasureSpace::Pose);
+    std::tie(x_tilde, x_invariant) = closest_invariant_primitive_error(x_hat, xd, control_objective, primitive);
     ///VFI state that is independent of control strategy
     const int& vfis_size = static_cast<int>(vfis.size());
     VectorXd w_vfi(vfis_size);
@@ -183,24 +232,26 @@ std::tuple<VectorXd, VectorXd, VectorXd, VectorXd, DQ> Example_AdaptiveControlle
         w_vfi(i) = vfi.get_distance_error(x_hat);
         switch(vfi.get_distance_type())
         {
-        case Example_VFI_DistanceType::None:
-            throw std::runtime_error("Expected valid value");
-        case Example_VFI_DistanceType::EUCLIDEAN:
-        {
-            if(w_vfi(i) < -MAX_ACCEPTABLE_CONSTRAINT_PENETRATION)
+            case Example_VFI_DistanceType::None:
+                throw std::runtime_error("Expected valid value");
+            case Example_VFI_DistanceType::EUCLIDEAN:
             {
-                std::cout << vfi.get_vfi_name() << " estimated penetration: " << w_vfi(i) << std::endl;
-                //throw std::runtime_error("Distance to obstacle point over threshold " + std::to_string(w_vfi(i)));
+                if(w_vfi(i) < -MAX_ACCEPTABLE_CONSTRAINT_PENETRATION)
+                {
+                    std::cout << vfi.get_vfi_name() << " estimated penetration: " << w_vfi(i) << std::endl;
+                    //throw std::runtime_error("Distance to obstacle point over threshold " + std::to_string(w_vfi(i)));
+                }
+                break;
             }
-        }
-        case Example_VFI_DistanceType::EUCLIDEAN_SQUARED:
-        {
-            if(w_vfi(i) < -MAX_ACCEPTABLE_CONSTRAINT_PENETRATION_SQUARED)
+            case Example_VFI_DistanceType::EUCLIDEAN_SQUARED:
             {
-                std::cout << vfi.get_vfi_name() << " estimated penetration: " << sqrt(fabs(w_vfi(i))) << std::endl;
-                //throw std::runtime_error("Distance to obstacle point over threshold " + std::to_string(w_vfi(i)));
+                if(w_vfi(i) < -MAX_ACCEPTABLE_CONSTRAINT_PENETRATION_SQUARED)
+                {
+                    std::cout << vfi.get_vfi_name() << " estimated penetration: " << sqrt(fabs(w_vfi(i))) << std::endl;
+                    //throw std::runtime_error("Distance to obstacle point over threshold " + std::to_string(w_vfi(i)));
+                }
+                break;
             }
-        }
         }
 
         //Store information
@@ -213,7 +264,8 @@ std::tuple<VectorXd, VectorXd, VectorXd, VectorXd, DQ> Example_AdaptiveControlle
     {
         ///Task
         const MatrixXd J_x_q = robot_->pose_jacobian(q);
-        const MatrixXd N_x_q = haminus8(xd)*C8()*robot_->pose_jacobian(q);
+//        const MatrixXd N_x_q = haminus8(xd)*C8()*robot_->pose_jacobian(q);
+        const MatrixXd N_x_q = _convert_pose_jacobian_to_control_objective(J_x_q, x_hat, xd, control_objective);
 
         const MatrixXd Hx = (N_x_q.transpose()*N_x_q + lambda*MatrixXd::Identity(n,n));
         const VectorXd fx = 2.*N_x_q.transpose()*eta_task*x_tilde;
@@ -342,6 +394,29 @@ MatrixXd Example_AdaptiveController::_convert_pose_jacobian_to_measure_space(con
     throw std::runtime_error("Not supposed to be reachable");
 }
 
+/*
+    convert the pose jacobian of the robot to the objective primitive jacobian.
+    Jx: pose jacobian
+    x:  pose of the robot
+    xd: desired objective primitive
+    control_objective_: the primitive type
+*/
+MatrixXd Example_AdaptiveController::_convert_pose_jacobian_to_control_objective(const MatrixXd& Jx, const DQ& x,  const DQ& xd, const ControlObjective& control_objective_)
+{
+    switch(control_objective_)
+    {
+    case ControlObjective::None:
+        throw std::runtime_error("Control Objective None not acceptable.");
+    case ControlObjective::Pose:
+        return haminus8(xd)*C8()*Jx;
+    case ControlObjective::Line:
+        return DQ_Kinematics::line_jacobian(Jx, x, Im(P(primitive)) );
+    case ControlObjective::Plane:
+        return DQ_Kinematics::plane_jacobian(Jx, x, Im(P(primitive)) );
+    }
+    throw std::runtime_error("Not supported currently");
+}
+
 /**
  * @brief get_complimentary_measure_space_jacobian as discussed in Section IV of
  * M. M. Marinho and B. V. Adorno,
@@ -374,7 +449,9 @@ MatrixXd Example_AdaptiveController::_get_complimentary_measure_space_jacobian(c
 
 Example_AdaptiveController::Example_AdaptiveController(const std::shared_ptr<Example_SerialManipulatorEDH> &robot, const Example_SimulationParameters &simulation_arguments):
     robot_(robot),
-    simulation_arguments_(simulation_arguments)
+    simulation_arguments_(simulation_arguments),
+    primitive(DQ(1)),
+    control_objective(ControlObjective::Pose)
 {
 
 }
@@ -428,4 +505,54 @@ VectorXd Example_AdaptiveController::_smart_vec(const DQ& x, const Example_Measu
     throw std::runtime_error("Not supposed to be reachable");
 }
 
+
+
+// Method to set the object type and pose
+void Example_AdaptiveController::set_control_objective(const ControlObjective& control_objective_)
+{
+    if (control_objective_ == ControlObjective::Pose || control_objective_ == ControlObjective::Line ||control_objective_ == ControlObjective::Plane )
+    {
+        control_objective = control_objective_;
+    }
+    else
+    {
+        throw std::runtime_error("Currently, only ControlObjective::Pose, ControlObjective::Line, and ControlObjective::Plane are supported");
+    }
+
+
+}
+
+void Example_AdaptiveController::set_primitive_to_effector(const DQ& primitive_)
+{
+    switch(control_objective)
+    {
+    case ControlObjective::Pose :
+        throw std::runtime_error("If the control objective is 'ControlObjective::Pose', please use set_effector_frame() instead.");
+        break;
+    case ControlObjective::Line :
+        if (is_line(primitive_))
+        {
+            primitive = primitive_;
+        }
+        else
+        {
+            throw std::runtime_error("The primitive type error. Line expected");
+        }
+        break;
+    case ControlObjective::Plane :
+    {
+        if (is_plane(primitive_))
+        {
+            primitive = primitive_;
+        }
+        else
+        {
+            throw std::runtime_error("The primitive type error. Plane expected");
+        }
+        break;
+    }
+    default:
+        throw std::runtime_error("Unsupported control objective type");
+    }
+}
 
