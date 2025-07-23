@@ -32,7 +32,7 @@ Contributors (aside from author):
 
 using namespace DQ_robotics;
 
-enum class Example_Primitive
+enum class M3_Primitive
 {
     None=0,
     Point,
@@ -40,14 +40,14 @@ enum class Example_Primitive
     Line
 };
 
-enum class Example_VFI_Direction
+enum class M3_VFI_Direction
 {
     None=0,
     FORBIDDEN_ZONE,//-Jd*q \leq \eta\tilde{d}, \tilde{d}=d-d_safe
     SAFE_ZONE//Jd*q \leq \eta\tilde{d}, \tilde{d}=d_safe-d
 };
 
-enum class Example_VFI_DistanceType
+enum class M3_VFI_DistanceType
 {
     None=0,
     EUCLIDEAN,
@@ -81,11 +81,11 @@ class M3_VFI
 {
     std::string workspace_entity_name_;
     std::string robot_entity_name_;
-    Example_Primitive type_;
+    M3_Primitive type_;
     DQ value_;
     std::shared_ptr<DQ_CoppeliaSimInterface> vi_;
     double safe_distance_;
-    Example_VFI_Direction vfi_direction_;
+    M3_VFI_Direction vfi_direction_;
     const int joint_index_; //Needs to be correctly implemented in the future
     const DQ relative_displacement_to_joint_;
     const std::string cs_reference_name_;
@@ -96,10 +96,10 @@ class M3_VFI
 public:
     M3_VFI(const std::string& workspace_entity_name,
                     const std::string& robot_entity_name,
-                    const Example_Primitive& type,
+                    const M3_Primitive& type,
                     const std::shared_ptr<DQ_CoppeliaSimInterface>& vi,
                     const double& safe_distance,
-                    const Example_VFI_Direction& vfi_direction,
+                    const M3_VFI_Direction& vfi_direction,
                     const int& joint_index,
                     const DQ& relative_displacement_to_joint,
                     const std::string& cs_reference_name="");
@@ -120,7 +120,7 @@ public:
 
     double get_safe_distance() const;
 
-    Example_VFI_DistanceType get_distance_type() const;
+    M3_VFI_DistanceType get_distance_type() const;
 
     void set_last_real_distance(const DQ& y);
 

@@ -38,10 +38,10 @@ Contributors (aside from author):
 
 M3_VFI::M3_VFI(const std::string &workspace_entity_name,
                const std::string& robot_entity_name,
-               const Example_Primitive &type,
+               const M3_Primitive &type,
                const std::shared_ptr<DQ_CoppeliaSimInterface> &vi,
                const double &safe_distance,
-               const Example_VFI_Direction &vfi_direction,
+               const M3_VFI_Direction &vfi_direction,
                const int &joint_index,
                const DQ &relative_displacement_to_joint,
                const std::string &cs_reference_name):
@@ -69,11 +69,11 @@ void M3_VFI::initialize()
 
     switch(type_)
     {
-    case Example_Primitive::None:
+    case M3_Primitive::None:
         throw std::runtime_error("Expected valid type.");
-    case Example_Primitive::Point:
+    case M3_Primitive::Point:
         throw std::runtime_error("Not implemented yet.");
-    case Example_Primitive::Plane:
+    case M3_Primitive::Plane:
     {
         const DQ x = conj(x_ref) * vi_->get_object_pose(workspace_entity_name_);
         const DQ r = rotation(x);
@@ -82,7 +82,7 @@ void M3_VFI::initialize()
         set_value(n + E_*dot(t,n));
         return;
     }
-    case Example_Primitive::Line:
+    case M3_Primitive::Line:
         const DQ x = conj(x_ref) * vi_->get_object_pose(workspace_entity_name_);
         const DQ r = rotation(x);
         const DQ l = Ad(r, k_);
@@ -101,9 +101,9 @@ void M3_VFI::set_value(const DQ &value)
 {
     switch(type_)
     {
-    case Example_Primitive::None:
+    case M3_Primitive::None:
         throw std::runtime_error("Expected valid type.");
-    case Example_Primitive::Point:
+    case M3_Primitive::Point:
         if(is_pure_quaternion(value))
         {
             value_ = value;
@@ -111,7 +111,7 @@ void M3_VFI::set_value(const DQ &value)
         }
         else
             throw std::runtime_error("Invalid point.");
-    case Example_Primitive::Plane:
+    case M3_Primitive::Plane:
         if(is_plane(value))
         {
             value_ = value;
@@ -119,7 +119,7 @@ void M3_VFI::set_value(const DQ &value)
         }
         else
             throw std::runtime_error("Invalid plane.");
-    case Example_Primitive::Line:
+    case M3_Primitive::Line:
         if(is_line(value))
         {
             value_ = value;
@@ -137,21 +137,21 @@ MatrixXd M3_VFI::get_distance_jacobian(const DQ &x, const MatrixXd &Jx) const
     const MatrixXd& local_Jx = haminus8(relative_displacement_to_joint_)*Jx;
     switch(type_)
     {
-    case Example_Primitive::None:
+    case M3_Primitive::None:
     {
         throw std::runtime_error("Expected valid type.");
     }
-    case Example_Primitive::Point:
+    case M3_Primitive::Point:
     {
         throw std::runtime_error("Not implemented yet.");
     }
-    case Example_Primitive::Plane:
+    case M3_Primitive::Plane:
     {
         const MatrixXd Jt = DQ_Kinematics::translation_jacobian(local_Jx, local_x);
         const DQ t = translation(local_x);
         return DQ_Kinematics::point_to_plane_distance_jacobian(Jt, t, get_value());
     }
-    case Example_Primitive::Line:
+    case M3_Primitive::Line:
     {
         const MatrixXd& Jt = DQ_Kinematics::translation_jacobian(local_Jx, local_x);
         const DQ& t = translation(local_x);
@@ -165,16 +165,16 @@ MatrixXd M3_VFI::get_vfi_matrix(const DQ &x, const MatrixXd &Jx) const
 {
     switch(vfi_direction_)
     {
-    case Example_VFI_Direction::None:
+    case M3_VFI_Direction::None:
     {
         throw std::runtime_error("Expected valid type");
     }
-    case Example_VFI_Direction::FORBIDDEN_ZONE:
+    case M3_VFI_Direction::FORBIDDEN_ZONE:
     {
         //-Jd*q \leq \eta\tilde{d}, \tilde{d}=d-d_safe
         return -get_distance_jacobian(x, Jx);
     }
-    case Example_VFI_Direction::SAFE_ZONE:
+    case M3_VFI_Direction::SAFE_ZONE:
     {
         //Jd*q \leq \eta\tilde{d}, \tilde{d}=d_safe-d
         return get_distance_jacobian(x, Jx);
@@ -189,20 +189,20 @@ double M3_VFI::get_distance(const DQ &x) const
     const DQ& local_x = x*relative_displacement_to_joint_;
     switch(type_)
     {
-    case Example_Primitive::None:
+    case M3_Primitive::None:
     {
         throw std::runtime_error("Expected valid type.");
     }
-    case Example_Primitive::Point:
+    case M3_Primitive::Point:
     {
         throw std::runtime_error("Not implemented yet.");
     }
-    case Example_Primitive::Plane:
+    case M3_Primitive::Plane:
     {
         const DQ& t = translation(local_x);
         return DQ_Geometry::point_to_plane_distance(t, get_value());
     }
-    case Example_Primitive::Line:
+    case M3_Primitive::Line:
     {
         const DQ& t = translation(local_x);
         return DQ_Geometry::point_to_line_squared_distance(t, get_value());
@@ -215,14 +215,14 @@ double M3_VFI::get_distance_error(const DQ &x) const
 {
     switch(vfi_direction_)
     {
-    case Example_VFI_Direction::None:
+    case M3_VFI_Direction::None:
         throw std::runtime_error("Expected valid type");
-    case Example_VFI_Direction::FORBIDDEN_ZONE:
+    case M3_VFI_Direction::FORBIDDEN_ZONE:
     {
         //-Jd*q \leq \eta\tilde{d}, \tilde{d}=d-d_safe
         return (get_distance(x) - safe_distance_);
     }
-    case Example_VFI_Direction::SAFE_ZONE:
+    case M3_VFI_Direction::SAFE_ZONE:
         //Jd*q \leq \eta\tilde{d}, \tilde{d}=d_safe-d
         return (safe_distance_ - get_distance(x));
     }
@@ -234,23 +234,23 @@ double M3_VFI::get_safe_distance() const
     return safe_distance_;
 }
 
-Example_VFI_DistanceType M3_VFI::get_distance_type() const
+M3_VFI_DistanceType M3_VFI::get_distance_type() const
 {
     switch(type_)
     {
-    case Example_Primitive::None:
+    case M3_Primitive::None:
         throw std::runtime_error("Expected valid type.");
-    case Example_Primitive::Point:
+    case M3_Primitive::Point:
     {
-        return Example_VFI_DistanceType::EUCLIDEAN_SQUARED;
+        return M3_VFI_DistanceType::EUCLIDEAN_SQUARED;
     }
-    case Example_Primitive::Plane:
+    case M3_Primitive::Plane:
     {
-        return Example_VFI_DistanceType::EUCLIDEAN;
+        return M3_VFI_DistanceType::EUCLIDEAN;
     }
-    case Example_Primitive::Line:
+    case M3_Primitive::Line:
     {
-        return Example_VFI_DistanceType::EUCLIDEAN_SQUARED;
+        return M3_VFI_DistanceType::EUCLIDEAN_SQUARED;
     }
     }
     throw std::runtime_error("Unexpected end of method.");

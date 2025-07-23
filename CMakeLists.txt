@@ -25,8 +25,13 @@ if(APPLE)
         /opt/homebrew/include
         /opt/homebrew/include/eigen3)
 endif()
+if(WIN32)
+    ADD_DEFINITIONS(-D_USE_MATH_DEFINES)
+    FIND_PACKAGE(Eigen3 CONFIG REQUIRED)
+    INCLUDE_DIRECTORIES(${EIGEN3_INCLUDE_DIR})
+endif()
 
-target_include_directories(adaptive_control PRIVATE
+target_include_directories(adaptive_control PUBLIC
     include
     submodules/qpOASES/include
     submodules/sas_core/include
@@ -39,10 +44,10 @@ target_include_directories(adaptive_control PRIVATE
 # https://thatonegamedev.com/cpp/cmake/how-to-manage-dependencies-with-cmake/
 set(BUILD_SHARED_LIBS FALSE CACHE BOOL "x" FORCE)
 add_subdirectory(submodules/dqrobotics/python/cpp)
-add_subdirectory(submodules/dqrobotics/python-interface-coppeliasim-zmq/submodules/dqrobotics/cpp-interface-coppeliasim)
+#add_subdirectory(submodules/dqrobotics/python-interface-coppeliasim-zmq/submodules/dqrobotics/cpp-interface-coppeliasim-zmq)
 add_subdirectory(submodules/qpOASES)
 
-target_link_libraries(adaptive_control PUBLIC dqrobotics cpp-interface-coppeliasim-zmq qpOASES)
+target_link_libraries(adaptive_control PUBLIC dqrobotics qpOASES)
 
 
 # 2025.05.17 Not currently able to compile this given the missing features in CoppeliaSimInterfaceZMQ

@@ -17,6 +17,3 @@
 [submodule "submodules/dqrobotics/--force"]
 	path = submodules/dqrobotics/--force
 	url = https://github.com/dqrobotics/python.git
-[submodule "python_wrapper/dqrobotics_python_interface_coppeliasim_zmq"]
-	path = python_wrapper/dqrobotics_python_interface_coppeliasim_zmq
-	url = https://github.com/dqrobotics/python-interface-coppeliasim-zmq.git

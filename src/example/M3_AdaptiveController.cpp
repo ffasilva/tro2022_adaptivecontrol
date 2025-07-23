@@ -183,9 +183,9 @@ std::tuple<VectorXd, VectorXd, VectorXd, VectorXd, DQ> M3_AdaptiveController::co
         w_vfi(i) = vfi.get_distance_error(x_hat);
         switch(vfi.get_distance_type())
         {
-        case Example_VFI_DistanceType::None:
+        case M3_VFI_DistanceType::None:
             throw std::runtime_error("Expected valid value");
-        case Example_VFI_DistanceType::EUCLIDEAN:
+        case M3_VFI_DistanceType::EUCLIDEAN:
         {
             if(w_vfi(i) < -MAX_ACCEPTABLE_CONSTRAINT_PENETRATION)
             {
@@ -193,7 +193,7 @@ std::tuple<VectorXd, VectorXd, VectorXd, VectorXd, DQ> M3_AdaptiveController::co
                 //throw std::runtime_error("Distance to obstacle point over threshold " + std::to_string(w_vfi(i)));
             }
         }
-        case Example_VFI_DistanceType::EUCLIDEAN_SQUARED:
+        case M3_VFI_DistanceType::EUCLIDEAN_SQUARED:
         {
             if(w_vfi(i) < -MAX_ACCEPTABLE_CONSTRAINT_PENETRATION_SQUARED)
             {
