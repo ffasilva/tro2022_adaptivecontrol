@@ -1,4 +1,3 @@
-#pragma once
 /**
 (C) Copyright 2020-2023 Murilo Marques Marinho (www.murilomarinho.info)
 
@@ -23,25 +22,27 @@ Author:
 Contributors (aside from author):
     None
 */
+#include <stdexcept>
 
-/**
- * @brief The Example_MeasureSpace enum represent the use cases discurssed in.
- *
- * M. M. Marinho and B. V. Adorno,
- * "Adaptive Constrained Kinematic Control Using Partial or Complete Task-Space Measurements,"
- * in IEEE Transactions on Robotics, vol. 38, no. 6, pp. 3498-3513, Dec. 2022,
- * doi: 10.1109/TRO.2022.3181047.
- */
-enum class Example_MeasureSpace
+#include "example/M3_MeasurementSpace.h"
+
+int get_measure_space_dimension(const M3_MeasureSpace &measure_space)
 {
-    None=0,
-    Pose,
-    Rotation,
-    Translation,
-    Distance,
-};
-
-int get_measure_space_dimension(const Example_MeasureSpace &measure_space);
+    switch(measure_space)
+    {
+    case M3_MeasureSpace::None:
+        return 0;
+    case M3_MeasureSpace::Pose:
+        return 8;
+    case M3_MeasureSpace::Rotation:
+        return 4;
+    case M3_MeasureSpace::Translation:
+        return 4;
+    case M3_MeasureSpace::Distance:
+        return 1;
+    }
+    throw std::runtime_error("Not supposed to be reachable");
+}
 
 
 

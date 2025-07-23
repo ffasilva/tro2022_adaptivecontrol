@@ -77,7 +77,7 @@ enum class Example_VFI_DistanceType
  * Murilo Marques Marinho, Juan José Quiroz-Omaña, Kanako Harada
  * https://arxiv.org/abs/2210.11877
  */
-class Example_VFI
+class M3_VFI
 {
     std::string workspace_entity_name_;
     std::string robot_entity_name_;
@@ -94,7 +94,7 @@ class Example_VFI
     double last_estimated_distance_;
     double last_real_distance_;
 public:
-    Example_VFI(const std::string& workspace_entity_name,
+    M3_VFI(const std::string& workspace_entity_name,
                     const std::string& robot_entity_name,
                     const Example_Primitive& type,
                     const std::shared_ptr<DQ_CoppeliaSimInterface>& vi,

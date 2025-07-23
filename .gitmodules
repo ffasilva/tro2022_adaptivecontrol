@@ -2,21 +2,12 @@
 	path = submodules/sas_core
 	url = https://github.com/SmartArmStack/sas_core.git
 	branch = ros2
-[submodule "submodules/dqrobotics/cpp"]
-	path = submodules/dqrobotics/cpp
-	url = https://github.com/dqrobotics/cpp.git
 [submodule "submodules/dqrobotics/cpp-interface-qpoases"]
 	path = submodules/dqrobotics/cpp-interface-qpoases
 	url = https://github.com/dqrobotics/cpp-interface-qpoases.git
 [submodule "submodules/qpOASES"]
 	path = submodules/qpOASES
 	url = https://github.com/coin-or/qpOASES.git
-[submodule "submodules/dqrobotics/cpp-interface-coppeliasim"]
-	path = submodules/dqrobotics/cpp-interface-coppeliasim
-	url = https://github.com/dqrobotics/cpp-interface-coppeliasim.git
-[submodule "submodules/dqrobotics/cpp-interface-coppeliasim-zmq"]
-	path = submodules/dqrobotics/cpp-interface-coppeliasim-zmq
-	url = https://github.com/dqrobotics/cpp-interface-coppeliasim-zmq.git
 [submodule "submodules/python"]
 	path = submodules/python
 	url = git@github.com:dqrobotics/python.git
@@ -25,9 +16,6 @@
 	url = git@github.com:dqrobotics/python.git
 [submodule "submodules/dqrobotics/--force"]
 	path = submodules/dqrobotics/--force
-	url = https://github.com/dqrobotics/python.git
-[submodule "python_wrapper/dqrobotics_python"]
-	path = python_wrapper/dqrobotics_python
 	url = https://github.com/dqrobotics/python.git
 [submodule "python_wrapper/dqrobotics_python_interface_coppeliasim_zmq"]
 	path = python_wrapper/dqrobotics_python_interface_coppeliasim_zmq

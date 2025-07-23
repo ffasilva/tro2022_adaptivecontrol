@@ -1,3 +1,4 @@
+#pragma once
 /**
 (C) Copyright 2020-2023 Murilo Marques Marinho (www.murilomarinho.info)
 
@@ -22,27 +23,25 @@ Author:
 Contributors (aside from author):
     None
 */
-#include <stdexcept>
 
-#include "example/Example_MeasurementSpace.h"
+#include <vector>
 
-int get_measure_space_dimension(const Example_MeasureSpace &measure_space)
+#include <dqrobotics/interfaces/vrep/DQ_SerialVrepRobot.h>
+
+#include "example/Example_SerialManipulatorEDH.h"
+
+using namespace DQ_robotics;
+
+class M3_VS050VrepRobot: public DQ_SerialVrepRobot
 {
-    switch(measure_space)
-    {
-    case Example_MeasureSpace::None:
-        return 0;
-    case Example_MeasureSpace::Pose:
-        return 8;
-    case Example_MeasureSpace::Rotation:
-        return 4;
-    case Example_MeasureSpace::Translation:
-        return 4;
-    case Example_MeasureSpace::Distance:
-        return 1;
-    }
-    throw std::runtime_error("Not supposed to be reachable");
-}
+public:
+    M3_VS050VrepRobot(const std::string& robot_name,
+                 const std::shared_ptr<DQ_VrepInterface>& vrep_interface_sptr);
+
+    static Example_SerialManipulatorEDH raw_kinematics();
+    DQ get_base_frame();
+    void set_base_frame(const DQ& base_frame, const std::string& reference_frame_name=VREP_OBJECTNAME_ABSOLUTE);
+};
 
 
 

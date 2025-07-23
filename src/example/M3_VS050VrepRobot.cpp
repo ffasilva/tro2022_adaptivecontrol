@@ -34,16 +34,16 @@ Contributors (aside from author):
 #include <dqrobotics/utils/DQ_Constants.h>
 #include <dqrobotics/utils/DQ_Math.h>
 
-#include "example/Example_VS050VrepRobot.h"
+#include "example/M3_VS050VrepRobot.h"
 
-Example_VS050VrepRobot::Example_VS050VrepRobot(const std::string& robot_name, const std::shared_ptr<DQ_VrepInterface>& vrep_interface_sptr):
+M3_VS050VrepRobot::M3_VS050VrepRobot(const std::string& robot_name, const std::shared_ptr<DQ_VrepInterface>& vrep_interface_sptr):
     DQ_SerialVrepRobot("VS050",6,robot_name,vrep_interface_sptr)
 {
     base_frame_name_ = "VS050_reference_frame";
 }
 
 
-Example_SerialManipulatorEDH Example_VS050VrepRobot::raw_kinematics()
+Example_SerialManipulatorEDH M3_VS050VrepRobot::raw_kinematics()
 {
     MatrixXd VS050_dh_matrix(5,6);
 
@@ -63,12 +63,12 @@ Example_SerialManipulatorEDH Example_VS050VrepRobot::raw_kinematics()
     return dq_serialmanipulator_edh;
 }
 
-DQ Example_VS050VrepRobot::get_base_frame()
+DQ M3_VS050VrepRobot::get_base_frame()
 {
     return _get_interface_sptr()->get_object_pose(base_frame_name_);
 }
 
-void Example_VS050VrepRobot::set_base_frame(const DQ& base_frame, const std::string& reference_frame_name)
+void M3_VS050VrepRobot::set_base_frame(const DQ& base_frame, const std::string& reference_frame_name)
 {
     _get_interface_sptr()->set_object_pose(base_frame_name_,base_frame, reference_frame_name);
 }

@@ -34,17 +34,17 @@ Contributors (aside from author):
 
 #include <dqrobotics/robot_modeling/DQ_Kinematics.h>
 #include <dqrobotics/utils/DQ_Geometry.h>
-#include "example/Example_VFI.h"
+#include "example/M3_VFI.h"
 
-Example_VFI::Example_VFI(const std::string &workspace_entity_name,
-                                 const std::string& robot_entity_name,
-                                 const Example_Primitive &type,
-                                 const std::shared_ptr<DQ_CoppeliaSimInterface> &vi,
-                                 const double &safe_distance,
-                                 const Example_VFI_Direction &vfi_direction,
-                                 const int &joint_index,
-                                 const DQ &relative_displacement_to_joint,
-                                 const std::string &cs_reference_name):
+M3_VFI::M3_VFI(const std::string &workspace_entity_name,
+               const std::string& robot_entity_name,
+               const Example_Primitive &type,
+               const std::shared_ptr<DQ_CoppeliaSimInterface> &vi,
+               const double &safe_distance,
+               const Example_VFI_Direction &vfi_direction,
+               const int &joint_index,
+               const DQ &relative_displacement_to_joint,
+               const std::string &cs_reference_name):
     workspace_entity_name_(workspace_entity_name),
     robot_entity_name_(robot_entity_name),
     type_(type),
@@ -59,7 +59,7 @@ Example_VFI::Example_VFI(const std::string &workspace_entity_name,
         throw std::runtime_error("Not implemented yet for anything besides joint_index_ == 7");
 }
 
-void Example_VFI::initialize()
+void M3_VFI::initialize()
 {
     //Reference pose is desired
     DQ x_ref(1);
@@ -92,12 +92,12 @@ void Example_VFI::initialize()
     }
 }
 
-DQ Example_VFI::get_value() const
+DQ M3_VFI::get_value() const
 {
     return value_;
 }
 
-void Example_VFI::set_value(const DQ &value)
+void M3_VFI::set_value(const DQ &value)
 {
     switch(type_)
     {
@@ -130,7 +130,7 @@ void Example_VFI::set_value(const DQ &value)
     }
 }
 
-MatrixXd Example_VFI::get_distance_jacobian(const DQ &x, const MatrixXd &Jx) const
+MatrixXd M3_VFI::get_distance_jacobian(const DQ &x, const MatrixXd &Jx) const
 {
     //Consider the relative displacement
     const DQ& local_x = x*relative_displacement_to_joint_;
@@ -161,7 +161,7 @@ MatrixXd Example_VFI::get_distance_jacobian(const DQ &x, const MatrixXd &Jx) con
     throw std::runtime_error("Unexpected end of method.");
 }
 
-MatrixXd Example_VFI::get_vfi_matrix(const DQ &x, const MatrixXd &Jx) const
+MatrixXd M3_VFI::get_vfi_matrix(const DQ &x, const MatrixXd &Jx) const
 {
     switch(vfi_direction_)
     {
@@ -183,7 +183,7 @@ MatrixXd Example_VFI::get_vfi_matrix(const DQ &x, const MatrixXd &Jx) const
     throw std::runtime_error("Unexpected end of method.");
 }
 
-double Example_VFI::get_distance(const DQ &x) const
+double M3_VFI::get_distance(const DQ &x) const
 {
     //Consider the relative displacement
     const DQ& local_x = x*relative_displacement_to_joint_;
@@ -211,7 +211,7 @@ double Example_VFI::get_distance(const DQ &x) const
     throw std::runtime_error("Unexpected end of method.");
 }
 
-double Example_VFI::get_distance_error(const DQ &x) const
+double M3_VFI::get_distance_error(const DQ &x) const
 {
     switch(vfi_direction_)
     {
@@ -229,12 +229,12 @@ double Example_VFI::get_distance_error(const DQ &x) const
     throw std::runtime_error("Unexpected end of method.");
 }
 
-double Example_VFI::get_safe_distance() const
+double M3_VFI::get_safe_distance() const
 {
     return safe_distance_;
 }
 
-Example_VFI_DistanceType Example_VFI::get_distance_type() const
+Example_VFI_DistanceType M3_VFI::get_distance_type() const
 {
     switch(type_)
     {
@@ -256,27 +256,27 @@ Example_VFI_DistanceType Example_VFI::get_distance_type() const
     throw std::runtime_error("Unexpected end of method.");
 }
 
-void Example_VFI::set_last_real_distance(const DQ &y)
+void M3_VFI::set_last_real_distance(const DQ &y)
 {
     last_real_distance_ = get_distance(y);
 }
 
-double Example_VFI::get_last_real_distance() const
+double M3_VFI::get_last_real_distance() const
 {
     return last_real_distance_;
 }
 
-void Example_VFI::set_last_estimated_distance(const DQ &x_hat)
+void M3_VFI::set_last_estimated_distance(const DQ &x_hat)
 {
     last_estimated_distance_ = get_distance(x_hat);
 }
 
-double Example_VFI::get_last_estimated_distance() const
+double M3_VFI::get_last_estimated_distance() const
 {
     return last_estimated_distance_;
 }
 
-std::string Example_VFI::get_vfi_name() const
+std::string M3_VFI::get_vfi_name() const
 {
     return workspace_entity_name_ + std::string("___") + robot_entity_name_;
 }

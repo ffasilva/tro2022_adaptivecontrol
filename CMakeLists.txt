@@ -1,15 +1,24 @@
 cmake_minimum_required(VERSION 3.15...3.26)
 
-project(adaptive_control_example LANGUAGES CXX)
+project(adaptive_control_cpp LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 add_compile_options(-Werror=return-type)
 
-find_package(Threads REQUIRED)
+add_library(adaptive_control
+        src/example/M3_AdaptiveController.cpp
+        src/example/M3_VFI.cpp
+        src/example/M3_SerialManipulatorEDH.cpp
+        #src/example/M3_VS050VrepRobot.cpp
+        src/example/M3_MeasurementSpace.cpp
+
+        submodules/sas_core/src/sas_object.cpp
+        submodules/sas_core/src/sas_clock.cpp
+)
 
 if(APPLE)
-    INCLUDE_DIRECTORIES(
+    target_include_directories(adaptive_control PRIVATE
         /usr/local/include/
         /usr/local/include/eigen3
         # Most recent versions of brew install here
@@ -17,21 +26,24 @@ if(APPLE)
         /opt/homebrew/include/eigen3)
 endif()
 
-include_directories(
+target_include_directories(adaptive_control PRIVATE
     include
+    submodules/qpOASES/include
     submodules/sas_core/include
+    submodules/dqrobotics/python/cpp/include
+    submodules/dqrobotics/python-interface-coppeliasim-zmq/submodules/dqrobotics/cpp-interface-coppeliasim/include
+    submodules/dqrobotics/cpp-interface-qpoases/include
     )
 
-add_library(adaptive_control
-        src/example/Example_AdaptiveController.cpp
-        src/example/Example_VFI.cpp
-        src/example/Example_SerialManipulatorEDH.cpp
-        #src/example/Example_VS050VrepRobot.cpp
-        src/example/Example_MeasurementSpace.cpp
+# CMAKE was not passing BUILD_SHARED_LIBS nicely to the add_subdirectory.
+# https://thatonegamedev.com/cpp/cmake/how-to-manage-dependencies-with-cmake/
+set(BUILD_SHARED_LIBS FALSE CACHE BOOL "x" FORCE)
+add_subdirectory(submodules/dqrobotics/python/cpp)
+add_subdirectory(submodules/dqrobotics/python-interface-coppeliasim-zmq/submodules/dqrobotics/cpp-interface-coppeliasim)
+add_subdirectory(submodules/qpOASES)
 
-        submodules/sas_core/src/sas_object.cpp
-        submodules/sas_core/src/sas_clock.cpp
-)
+target_link_libraries(adaptive_control PUBLIC dqrobotics cpp-interface-coppeliasim-zmq qpOASES)
+
 
 # 2025.05.17 Not currently able to compile this given the missing features in CoppeliaSimInterfaceZMQ
 #add_executable(${PROJECT_NAME}

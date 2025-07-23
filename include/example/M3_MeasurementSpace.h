@@ -24,24 +24,24 @@ Contributors (aside from author):
     None
 */
 
-#include <vector>
-
-#include <dqrobotics/interfaces/vrep/DQ_SerialVrepRobot.h>
-
-#include "example/Example_SerialManipulatorEDH.h"
-
-using namespace DQ_robotics;
-
-class Example_VS050VrepRobot: public DQ_SerialVrepRobot
+/**
+ * @brief The Example_MeasureSpace enum represent the use cases discurssed in.
+ *
+ * M. M. Marinho and B. V. Adorno,
+ * "Adaptive Constrained Kinematic Control Using Partial or Complete Task-Space Measurements,"
+ * in IEEE Transactions on Robotics, vol. 38, no. 6, pp. 3498-3513, Dec. 2022,
+ * doi: 10.1109/TRO.2022.3181047.
+ */
+enum class M3_MeasureSpace
 {
-public:
-    Example_VS050VrepRobot(const std::string& robot_name,
-                 const std::shared_ptr<DQ_VrepInterface>& vrep_interface_sptr);
-
-    static Example_SerialManipulatorEDH raw_kinematics();
-    DQ get_base_frame();
-    void set_base_frame(const DQ& base_frame, const std::string& reference_frame_name=VREP_OBJECTNAME_ABSOLUTE);
+    None=0,
+    Pose,
+    Rotation,
+    Translation,
+    Distance,
 };
+
+int get_measure_space_dimension(const M3_MeasureSpace &measure_space);
 
 
 

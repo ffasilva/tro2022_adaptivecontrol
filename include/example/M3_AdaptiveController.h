@@ -35,9 +35,9 @@ Contributors (aside from author):
 #include<dqrobotics/DQ.h>
 #include<dqrobotics/solvers/DQ_QPOASESSolver.h>
 
-#include"example/Example_SerialManipulatorEDH.h"
-#include"example/Example_MeasurementSpace.h"
-#include"example/Example_VFI.h"
+#include"example/M3_SerialManipulatorEDH.h"
+#include"example/M3_MeasurementSpace.h"
+#include"example/M3_VFI.h"
 
 using namespace Eigen;
 using namespace DQ_robotics;
@@ -52,7 +52,7 @@ enum class Example_AdaptiveControlStrategy
 
 struct Example_SimulationParameters
 {
-    Example_MeasureSpace measure_space;
+    M3_MeasureSpace measure_space;
     double proportional_gain;
     double vfi_gain;
     double vfi_weight;
@@ -64,34 +64,34 @@ struct Example_SimulationParameters
 //To the pure soul that will port this to DQ_robotics.
 //DQ_robotics needs to be altered before inheritance can happen here.
 //For instance
-//- add a class similar to DQ_SerialManipulator that provides parameter-space Jacobians, e.g. Example_SerialManipulatorEDH.
+//- add a class similar to DQ_SerialManipulator that provides parameter-space Jacobians, e.g. M3_SerialManipulatorEDH.
 //- add a class similar to DQ_KinematicController but for the parameter-space.
-//- And many of the support classes in this example, such as Example_AdaptiveControlStrategy and Example_MeasureSpace.
-class Example_AdaptiveController
+//- And many of the support classes in this example, such as Example_AdaptiveControlStrategy and M3_MeasureSpace.
+class M3_AdaptiveController
 {
 private:
     const Example_SimulationParameters& simulation_arguments_;
-    std::shared_ptr<Example_SerialManipulatorEDH> robot_;
+    std::shared_ptr<M3_SerialManipulatorEDH> robot_;
 
     DQ_QPOASESSolver task_space_solver_;
     DQ_QPOASESSolver parameter_space_solver_;
 
-    DQ _convert_pose_to_measure_space(const DQ& x, const Example_MeasureSpace& measure_space);
+    DQ _convert_pose_to_measure_space(const DQ& x, const M3_MeasureSpace& measure_space);
 
-    static VectorXd _smart_vec(const DQ& x, const Example_MeasureSpace& measure_space);
-    static MatrixXd _convert_pose_jacobian_to_measure_space(const MatrixXd& Jx, const DQ &x, const DQ &xd, const Example_MeasureSpace& measure_space);
-    static MatrixXd _get_complimentary_measure_space_jacobian(const MatrixXd& Jx, const DQ &x, const Example_MeasureSpace& measure_space);
+    static VectorXd _smart_vec(const DQ& x, const M3_MeasureSpace& measure_space);
+    static MatrixXd _convert_pose_jacobian_to_measure_space(const MatrixXd& Jx, const DQ &x, const DQ &xd, const M3_MeasureSpace& measure_space);
+    static MatrixXd _get_complimentary_measure_space_jacobian(const MatrixXd& Jx, const DQ &x, const M3_MeasureSpace& measure_space);
  public:
-    Example_AdaptiveController()=delete;
-    Example_AdaptiveController(Example_AdaptiveController&)=delete;
-    Example_AdaptiveController(const std::shared_ptr<Example_SerialManipulatorEDH>& robot,
+    M3_AdaptiveController()=delete;
+    M3_AdaptiveController(M3_AdaptiveController&)=delete;
+    M3_AdaptiveController(const std::shared_ptr<M3_SerialManipulatorEDH>& robot,
                                const Example_SimulationParameters &simulation_arguments);
 
     std::tuple<VectorXd, VectorXd, VectorXd, VectorXd, DQ> compute_setpoint_control_signal(const Example_AdaptiveControlStrategy &control_strategy,
                                                                                            const VectorXd& q,
                                                                                            const DQ& xd,
                                                                                            const DQ& y,
-                                                                                           std::vector<Example_VFI> &vfis);
+                                                                                           std::vector<M3_VFI> &vfis);
 };
 
 
