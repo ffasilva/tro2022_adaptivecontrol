@@ -9,3 +9,9 @@
 	path = submodules/qpOASES
 	url = https://github.com/coin-or/qpOASES.git
 
+[submodule "submodules/dqrobotics/python"]
+	path = submodules/dqrobotics/python
+	url = https://github.com/dqrobotics/python.git
+[submodule "submodules/dqrobotics/python-interface-coppeliasim-zmq"]
+	path = submodules/dqrobotics/python-interface-coppeliasim-zmq
+	url = https://github.com/dqrobotics/python-interface-coppeliasim-zmq.git
