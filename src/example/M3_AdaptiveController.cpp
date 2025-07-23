@@ -32,7 +32,7 @@ Contributors (aside from author):
 #include <dqrobotics/utils/DQ_Math.h>
 #include <dqrobotics/utils/DQ_Geometry.h>
 
-#include "example/M3_AdaptiveController.h"
+#include "marinholab/papers/tro2022/adaptive_control/M3_AdaptiveController.h"
 
 
 std::tuple<MatrixXd, VectorXd> get_variable_boundary_inequalities(const VectorXd& q, const std::tuple<VectorXd, VectorXd>& boundaries, const VectorXd& damping_matrix_diagonal=VectorXd())

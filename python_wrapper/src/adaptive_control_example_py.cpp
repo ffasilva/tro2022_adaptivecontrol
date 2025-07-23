@@ -4,11 +4,11 @@
 #include <pybind11/eigen.h>
 #include <pybind11/stl.h>
 
-#include "example/M3_AdaptiveController.h"
-#include "example/M3_VFI.h"
-#include "example/M3_SerialManipulatorEDH.h"
+#include "marinholab/papers/tro2022/adaptive_control/M3_AdaptiveController.h"
+#include "marinholab/papers/tro2022/adaptive_control/M3_VFI.h"
+#include "marinholab/papers/tro2022/adaptive_control/M3_SerialManipulatorEDH.h"
 //#include "example/Example_VS050VrepRobot.h"
-#include "example/M3_MeasurementSpace.h"
+#include "marinholab/papers/tro2022/adaptive_control/M3_MeasurementSpace.h"
 
 #define STRINGIFY(x) #x
 #define MACRO_STRINGIFY(x) STRINGIFY(x)

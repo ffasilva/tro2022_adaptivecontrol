@@ -30,7 +30,7 @@ Contributors (aside from author):
  * in IEEE Transactions on Robotics, vol. 38, no. 6, pp. 3498-3513, Dec. 2022,
  * doi: 10.1109/TRO.2022.3181047.
  */
-#include <example/M3_SerialManipulatorEDH.h>
+#include <marinholab/papers/tro2022/adaptive_control/M3_SerialManipulatorEDH.h>
 
 M3_SerialManipulatorEDH::M3_SerialManipulatorEDH(const MatrixXd& dh_matrix):
     DQ_SerialManipulator(dh_matrix.cols()),

@@ -34,7 +34,7 @@ Contributors (aside from author):
 
 #include <dqrobotics/robot_modeling/DQ_Kinematics.h>
 #include <dqrobotics/utils/DQ_Geometry.h>
-#include "example/M3_VFI.h"
+#include "marinholab/papers/tro2022/adaptive_control/M3_VFI.h"
 
 M3_VFI::M3_VFI(const std::string &workspace_entity_name,
                const std::string& robot_entity_name,

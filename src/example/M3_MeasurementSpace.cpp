@@ -24,7 +24,7 @@ Contributors (aside from author):
 */
 #include <stdexcept>
 
-#include "example/M3_MeasurementSpace.h"
+#include "marinholab/papers/tro2022/adaptive_control/M3_MeasurementSpace.h"
 
 int get_measure_space_dimension(const M3_MeasureSpace &measure_space)
 {

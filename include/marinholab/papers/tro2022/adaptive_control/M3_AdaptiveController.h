@@ -35,9 +35,9 @@ Contributors (aside from author):
 #include<dqrobotics/DQ.h>
 #include<dqrobotics/solvers/DQ_QPOASESSolver.h>
 
-#include"example/M3_SerialManipulatorEDH.h"
-#include"example/M3_MeasurementSpace.h"
-#include"example/M3_VFI.h"
+#include"marinholab/papers/tro2022/adaptive_control/M3_SerialManipulatorEDH.h"
+#include"marinholab/papers/tro2022/adaptive_control/M3_MeasurementSpace.h"
+#include"marinholab/papers/tro2022/adaptive_control/M3_VFI.h"
 
 using namespace Eigen;
 using namespace DQ_robotics;
