@@ -55,8 +55,7 @@ M3_VFI::M3_VFI(const std::string &workspace_entity_name,
     relative_displacement_to_joint_(relative_displacement_to_joint),
     cs_reference_name_(cs_reference_name)
 {
-    if(joint_index_ != 7)
-        throw std::runtime_error("Not implemented yet for anything besides joint_index_ == 7");
+    // Do nothing
 }
 
 void M3_VFI::initialize()
