@@ -131,6 +131,99 @@ std::tuple<VectorXd,double> closest_invariant_error(const DQ& x, const DQ& xd, c
     throw std::runtime_error("Not supposed to be reachable");
 }
 
+
+/**
+ * @brief Get the control objective.
+ * @return A ControlObjective enumeration represeting the control objective.
+ */
+ControlObjective M3_AdaptiveController::get_control_objective() const
+{
+    return control_objective_;
+}
+
+/**
+ * @brief Set the control objective. Currently, only supports ControlObjective::Pose and ControlObjective::Line. The control
+ *        objective is set to pose by default for legacy support.
+ * @param control_objective A ControlObjective enumeration represeting the control objective.
+ */
+void M3_AdaptiveController::set_control_objective(const ControlObjective &control_objective)
+{
+    switch(control_objective)
+    {
+    case ControlObjective::Pose:
+    {
+        control_objective_ = control_objective;
+        break;
+    }
+    case ControlObjective::Line:
+    {
+        control_objective_ = control_objective;
+        break;
+    }
+    default:
+    {
+        throw std::runtime_error("Invalid control_objective. Currently, only supports"
+                                 " ControlObjective::Pose and ControlObjective::Line.");
+    }
+    }
+}
+
+/**
+ * @brief Set the geometric primitive attached to the end-effector. Currently, only supports lines if ControlObjective::Line.
+ *        If ControlObjective::Pose, this method has no effect.
+ * @param primitive A dual quaternion represeting a geometric primitive.
+ */
+void M3_AdaptiveController::set_primitive_to_effector(const DQ &primitive)
+{
+    switch(control_objective_)
+    {
+    case ControlObjective::Pose: // there's nothing to set
+    {
+        break;
+    }
+    case ControlObjective::Line:
+    {
+        if (!is_line(primitive))
+            throw std::runtime_error("Expected a line.");
+
+        attached_primitive_ = primitive;
+        break;
+    }
+    default:
+    {
+        throw std::runtime_error("Unexpected fallthrough.");
+    }
+    }
+}
+
+/**
+ * @brief Set the target geometric primitive. Currently, only supports lines if ControlObjective::Line.
+ *        If ControlObjective::Pose, this method has no effect.
+ * @param primitive A dual quaternion represeting a geometric primitive.
+ */
+void M3_AdaptiveController::set_target_primitive(const DQ &primitive)
+{
+    switch(control_objective_)
+    {
+    case ControlObjective::Pose: // there's nothing to set
+    {
+        break;
+    }
+    case ControlObjective::Line: // only supports line-to-line
+    {
+        if (!is_line(primitive))
+            throw std::runtime_error("Expected a line.");
+
+        target_primitive_ = primitive;
+        break;
+    }
+    default:
+    {
+        throw std::runtime_error("Unexpected fallthrough.");
+    }
+    }
+}
+
 /**
  * @brief compute_setpoint_control_signal One possible implementation of Algorithm 1 of
  * M. M. Marinho and B. V. Adorno,
