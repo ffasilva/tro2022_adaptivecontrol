@@ -81,6 +81,9 @@ private:
     DQ_QPOASESSolver task_space_solver_;
     DQ_QPOASESSolver parameter_space_solver_;
 
+    std::tuple<VectorXd,double> _closest_invariant_task_error(const DQ& x, const DQ& xd, const M3_MeasureSpace& measure_space);
+    MatrixXd _get_task_jacobian(const VectorXd& q, const DQ& xd) const;
+
     DQ _convert_pose_to_measure_space(const DQ& x, const M3_MeasureSpace& measure_space);
 
     static VectorXd _smart_vec(const DQ& x, const M3_MeasureSpace& measure_space);
