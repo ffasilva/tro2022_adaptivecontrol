@@ -207,6 +207,29 @@ MatrixXd M3_AdaptiveController::_get_task_jacobian(const VectorXd &q, const DQ &
     throw std::runtime_error("Not supposed to be reachable");
 }
 
+MatrixXd M3_AdaptiveController::_get_parameter_jacobian(const VectorXd& q, const VectorXd& x_tilde, const DQ& xd) const
+{
+    const MatrixXd J_y_a = robot_->parameter_pose_jacobian(q);
+
+    switch (control_objective_)
+    {
+    case ControlObjective::Pose:
+    {
+        return x_tilde.transpose()*haminus8(xd)*C8()*J_y_a;
+    }
+    case ControlObjective::Line:
+    {
+        const DQ y_hat = robot_->fkm(q);
+        const MatrixXd J_x_a = DQ_Kinematics::line_jacobian(J_y_a, y_hat, attached_primitive_);
+        return x_tilde.transpose()*J_x_a;
+    }
+    default:
+        throw std::runtime_error("Invalid control_objective. Currently, only supports"
+                                 " ControlObjective::Pose and ControlObjective::Line.");
+    }
+    throw std::runtime_error("Not supposed to be reachable");
+}
+
 /**
  * @brief Get the control objective.
  * @return A ControlObjective enumeration represeting the control objective.
@@ -258,8 +281,8 @@ void M3_AdaptiveController::set_primitive_to_effector(const DQ &primitive)
     }
     case ControlObjective::Line:
     {
-        if (!is_line(primitive))
-            throw std::runtime_error("Expected a line.");
+        if (!is_unit(primitive))
+            throw std::runtime_error("Expected a line direction.");
 
         attached_primitive_ = primitive;
         break;
@@ -440,7 +463,7 @@ std::tuple<VectorXd, VectorXd, VectorXd, VectorXd, DQ> M3_AdaptiveController::co
         const VectorXd b_N_a = VectorXd::Zero(N_a.rows());
 
         ///Inequality constraint for Lyapunov stability
-        const MatrixXd A_y = x_tilde.transpose()*haminus8(xd)*C8()*J_y_a;
+        const MatrixXd A_y = this->_get_parameter_jacobian(q, x_tilde, xd);
         const VectorXd b_y = VectorXd::Zero(1);
 
         MatrixXd W_vfi_a(vfis_size, p);

@@ -83,6 +83,7 @@ private:
 
     std::tuple<VectorXd,double> _closest_invariant_task_error(const DQ& x, const DQ& xd, const M3_MeasureSpace& measure_space);
     MatrixXd _get_task_jacobian(const VectorXd& q, const DQ& xd) const;
+    MatrixXd _get_parameter_jacobian(const VectorXd& q, const VectorXd& x_tilde, const DQ& xd) const;
 
     DQ _convert_pose_to_measure_space(const DQ& x, const M3_MeasureSpace& measure_space);
 
