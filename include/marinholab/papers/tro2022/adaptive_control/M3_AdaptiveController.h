@@ -55,6 +55,7 @@ struct Example_SimulationParameters
 {
     M3_MeasureSpace measure_space;
     double proportional_gain;
+    double proportional_adaptation_gain;
     double vfi_gain;
     double vfi_weight;
     double damping;

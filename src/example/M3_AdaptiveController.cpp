@@ -350,7 +350,7 @@ std::tuple<VectorXd, VectorXd, VectorXd, VectorXd, DQ> M3_AdaptiveController::co
     const int n = robot_->get_dim_configuration_space();
     const int p = robot_->get_dim_parameter_space();
     const double& eta_task = simulation_arguments_.proportional_gain;
-    const double& eta_parameter = simulation_arguments_.proportional_gain;
+    const double& eta_parameter = simulation_arguments_.proportional_adaptation_gain;
     const double& vfi_gain = simulation_arguments_.vfi_gain;
     const double& vfi_weight = simulation_arguments_.vfi_weight;
     const double& lambda = simulation_arguments_.damping;
