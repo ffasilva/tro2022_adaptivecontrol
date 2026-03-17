@@ -253,7 +253,9 @@ std::vector<bool> M3_AdaptiveController::get_are_vfis_activated(const VectorXd& 
     std::vector<bool> are_vfis_activated(n, false);
 
     const MatrixXd Jx = robot_->pose_jacobian(q);
-    const double& eta_task = simulation_arguments_.proportional_gain;
+    const double& vfi_gain = simulation_arguments_.vfi_gain;
+    const double& vfi_weight = simulation_arguments_.vfi_weight;
+    const double& eta = vfi_gain*vfi_weight;
     for (unsigned long i=0; i<n; i++){
         const M3_VFI& vfi = vfis.at(i);
 
@@ -268,13 +270,15 @@ std::vector<bool> M3_AdaptiveController::get_are_vfis_activated(const VectorXd& 
         }
         case M3_VFI_Direction::FORBIDDEN_ZONE:
         {
-            if ( ( (Jd*q_dot).value() + eta_task*d + d_safe ) <= delta )
+            const double d_tilde = d - d_safe;
+            if ( abs( ( (Jd*q_dot).value() + eta*d_tilde ) ) <= delta )
                 are_vfis_activated.at(i) = true;
             break;
         }
         case M3_VFI_Direction::SAFE_ZONE:
         {
-            if ( ( (Jd*q_dot).value() - eta_task*d + d_safe ) <= delta )
+            const double d_tilde = d_safe - d;
+            if ( abs( ( (Jd*q_dot).value() - eta*d_tilde ) ) <= delta )
                 are_vfis_activated.at(i) = true;
             break;
         }
