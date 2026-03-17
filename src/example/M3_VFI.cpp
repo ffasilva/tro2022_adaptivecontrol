@@ -493,6 +493,11 @@ M3_Primitive M3_VFI::get_type() const
     return type_;
 }
 
+M3_VFI_Direction M3_VFI::get_vfi_direction() const
+{
+    return vfi_direction_;
+}
+
 void M3_VFI::set_last_real_distance(const DQ &y)
 {
     last_real_distance_ = get_distance(y);

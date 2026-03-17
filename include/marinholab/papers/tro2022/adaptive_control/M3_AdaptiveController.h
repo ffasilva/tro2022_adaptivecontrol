@@ -99,6 +99,12 @@ private:
 
     ControlObjective get_control_objective() const;
 
+    std::vector<bool> get_are_vfis_activated(const VectorXd& q,
+                                             const VectorXd& q_dot,
+                                             const DQ &x,
+                                             const std::vector<M3_VFI> &vfis,
+                                             const double &delta) const;
+
     void set_control_objective(const ControlObjective& control_objective);
 
     void set_primitive_to_effector(const DQ& primitive);

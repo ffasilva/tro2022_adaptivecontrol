@@ -150,6 +150,8 @@ public:
 
     M3_Primitive get_type() const;
 
+    M3_VFI_Direction get_vfi_direction() const;
+
     void set_last_real_distance(const DQ& y);
 
     double get_last_real_distance() const;

@@ -240,6 +240,51 @@ ControlObjective M3_AdaptiveController::get_control_objective() const
 }
 
 /**
+ * @brief Get the control objective.
+ * @return A ControlObjective enumeration represeting the control objective.
+ */
+std::vector<bool> M3_AdaptiveController::get_are_vfis_activated(const VectorXd& q,
+                                                                const VectorXd& q_dot,
+                                                                const DQ& x,
+                                                                const std::vector<M3_VFI>& vfis,
+                                                                const double& delta) const
+{
+    const unsigned long& n = vfis.size();
+    std::vector<bool> are_vfis_activated(n, false);
+
+    const MatrixXd Jx = robot_->pose_jacobian(q);
+    const double& eta_task = simulation_arguments_.proportional_gain;
+    for (unsigned long i=0; i<n; i++){
+        const M3_VFI& vfi = vfis.at(i);
+
+        const MatrixXd Jd = vfi.get_distance_jacobian(x, Jx);
+        const double d = vfi.get_distance(x);
+        const double d_safe = vfi.get_safe_distance();
+        switch(vfi.get_vfi_direction())
+        {
+        case M3_VFI_Direction::None:
+        {
+            throw std::runtime_error("Expected valid M3_VFI_Direction.");
+        }
+        case M3_VFI_Direction::FORBIDDEN_ZONE:
+        {
+            if ( ( (Jd*q_dot).value() + eta_task*d + d_safe ) <= delta )
+                are_vfis_activated.at(i) = true;
+            break;
+        }
+        case M3_VFI_Direction::SAFE_ZONE:
+        {
+            if ( ( (Jd*q_dot).value() - eta_task*d + d_safe ) <= delta )
+                are_vfis_activated.at(i) = true;
+            break;
+        }
+        }
+    }
+
+    return are_vfis_activated;
+}
+
+/**
  * @brief Set the control objective. Currently, only supports ControlObjective::Pose and ControlObjective::Line. The control
  *        objective is set to pose by default for legacy support.
  * @param control_objective A ControlObjective enumeration represeting the control objective.
