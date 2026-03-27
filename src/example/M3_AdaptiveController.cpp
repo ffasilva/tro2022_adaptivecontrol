@@ -141,7 +141,7 @@ std::tuple<VectorXd,double> closest_invariant_error(const DQ& x, const DQ& xd, c
  */
 std::tuple<VectorXd,double> M3_AdaptiveController::_closest_invariant_task_error(const DQ& x,
                                                                                  const DQ& xd,
-                                                                                 const M3_MeasureSpace& measure_space)
+                                                                                  const M3_MeasureSpace& measure_space) const
 {
     switch(measure_space)
     {
@@ -183,6 +183,22 @@ std::tuple<VectorXd,double> M3_AdaptiveController::_closest_invariant_task_error
                                  " M3_MeasureSpace::Pose.");
     }
     throw std::runtime_error("Not supposed to be reachable");
+}
+
+/**
+ * @brief Get the norm of the closest invariant task error.
+ *
+ * @param x the current task variable.
+ * @param xd the desired taks variable.
+ * @param measure_space see Example_MeasureSpace for possible values.
+ * @return The norm of the closest invariant task error.
+ */
+double M3_AdaptiveController::get_error_norm(const DQ& x, const DQ& xd, const M3_MeasureSpace& measure_space) const
+{
+    VectorXd error;
+    std::tie(error, std::ignore) = this->_closest_invariant_task_error(x, xd, measure_space);
+
+    return error.norm();
 }
 
 MatrixXd M3_AdaptiveController::_get_task_jacobian(const VectorXd &q, const DQ &xd) const

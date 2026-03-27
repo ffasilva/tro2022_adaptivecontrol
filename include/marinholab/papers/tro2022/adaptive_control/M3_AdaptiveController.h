@@ -82,7 +82,7 @@ private:
     DQ_QPOASESSolver task_space_solver_;
     DQ_QPOASESSolver parameter_space_solver_;
 
-    std::tuple<VectorXd,double> _closest_invariant_task_error(const DQ& x, const DQ& xd, const M3_MeasureSpace& measure_space);
+    std::tuple<VectorXd,double> _closest_invariant_task_error(const DQ& x, const DQ& xd, const M3_MeasureSpace& measure_space) const;
     MatrixXd _get_task_jacobian(const VectorXd& q, const DQ& xd) const;
     MatrixXd _get_parameter_jacobian(const VectorXd& q, const VectorXd& x_tilde, const DQ& xd) const;
 
@@ -104,6 +104,8 @@ private:
                                              const DQ &x,
                                              const std::vector<M3_VFI> &vfis,
                                              const double &delta) const;
+
+    double get_error_norm(const DQ& x, const DQ& xd, const M3_MeasureSpace& measure_space) const;
 
     void set_control_objective(const ControlObjective& control_objective);
 
