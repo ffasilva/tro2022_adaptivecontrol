@@ -32,6 +32,8 @@ Contributors (aside from author):
 #include <dqrobotics/utils/DQ_Math.h>
 #include <dqrobotics/utils/DQ_Geometry.h>
 
+#include <Eigen/QR>
+
 #include "marinholab/papers/tro2022/adaptive_control/M3_AdaptiveController.h"
 
 
@@ -222,6 +224,15 @@ MatrixXd M3_AdaptiveController::_get_task_jacobian(const VectorXd &q, const DQ &
     }
     throw std::runtime_error("Not supposed to be reachable");
 }
+
+double M3_AdaptiveController::get_condition_number_task_jacobian(const VectorXd &q, const DQ &xd) const
+{
+    MatrixXd J_task = this->_get_task_jacobian(q, xd);
+    Eigen::MatrixXd pinv_J_task = J_task.completeOrthogonalDecomposition().pseudoInverse();
+
+    return (pinv_J_task.norm())*(J_task.norm());
+}
+
 
 MatrixXd M3_AdaptiveController::_get_parameter_jacobian(const VectorXd& q, const VectorXd& x_tilde, const DQ& xd) const
 {
