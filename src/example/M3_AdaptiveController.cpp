@@ -33,6 +33,7 @@ Contributors (aside from author):
 #include <dqrobotics/utils/DQ_Geometry.h>
 
 #include <Eigen/QR>
+#include <Eigen/src/SVD/JacobiSVD.h>
 
 #include "marinholab/papers/tro2022/adaptive_control/M3_AdaptiveController.h"
 
@@ -223,6 +224,16 @@ MatrixXd M3_AdaptiveController::_get_task_jacobian(const VectorXd &q, const DQ &
                                  " ControlObjective::Pose and ControlObjective::Line.");
     }
     throw std::runtime_error("Not supposed to be reachable");
+}
+
+VectorXd M3_AdaptiveController::get_singular_values_task_Jacobian(const VectorXd &q, const DQ &xd) const
+{
+    MatrixXd J_task = this->_get_task_jacobian(q, xd);
+
+    Eigen::JacobiSVD<MatrixXd> svd(J_task, Eigen::ComputeThinU | Eigen::ComputeThinV);
+    VectorXd singular_values = svd.singularValues();
+
+    return singular_values;
 }
 
 double M3_AdaptiveController::get_condition_number_task_jacobian(const VectorXd &q, const DQ &xd) const

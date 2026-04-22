@@ -107,6 +107,7 @@ private:
 
     double get_error_norm(const DQ& x, const DQ& xd, const M3_MeasureSpace& measure_space) const;
 
+    VectorXd get_singular_values_task_Jacobian(const VectorXd &q, const DQ &xd) const;
     double get_condition_number_task_jacobian(const VectorXd &q, const DQ &xd) const;
 
     void set_control_objective(const ControlObjective& control_objective);
