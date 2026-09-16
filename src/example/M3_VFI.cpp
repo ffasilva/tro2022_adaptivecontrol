@@ -311,7 +311,7 @@ MatrixXd M3_VFI::get_distance_jacobian(const DQ &x, const MatrixXd &Jx) const
     {
         const MatrixXd Jt = DQ_Kinematics::translation_jacobian(local_Jx, local_x);
         const DQ t = translation(local_x);
-        return DQ_Kinematics::point_to_point_distance_jacobian(local_Jx, t, get_value());
+        return DQ_Kinematics::point_to_point_distance_jacobian(Jt, t, get_value());
     }
     case M3_Primitive::Plane:
     {
