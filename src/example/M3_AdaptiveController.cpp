@@ -521,6 +521,41 @@ std::tuple<VectorXd, VectorXd, VectorXd, VectorXd, DQ> M3_AdaptiveController::co
         VectorXd w_q(4*n+w_vfi.size()); w_q << w_q_dot_limits, w_q_limits, vfi_gain*vfi_weight*w_vfi;
 
         uq = task_space_solver_.solve_quadratic_program(2.0*Hx, fx, W_q, w_q, MatrixXd::Zero(0,0), VectorXd(0));
+
+        // ----------------------
+        const double beta = 0.5;
+        const int m = n + vfis_size;
+        MatrixXd Hx_e(m,m);
+        Hx_e <<                          Hx,                  MatrixXd::Zero(n,vfis_size),
+                MatrixXd::Zero(vfis_size,n), beta*MatrixXd::Identity(vfis_size,vfis_size);
+        VectorXd fx_e(m);
+        fx_e << fx, VectorXd::Zero(vfis_size);
+
+        MatrixXd W_q_dot_limits_e(2*n, m);
+        W_q_dot_limits_e << W_q_dot_limits, MatrixXd::Zero(2*n,vfis_size);
+        MatrixXd W_q_limits_e(2*n, m);
+        W_q_limits_e << W_q_limits, MatrixXd::Zero(2*n,vfis_size);
+        MatrixXd W_vfi_q_e(vfis_size, m);
+        W_vfi_q_e << W_vfi_q, -1*MatrixXd::Ones(vfis_size,vfis_size);
+        MatrixXd W_s_limits(2*vfis_size, vfis_size);
+        W_s_limits << MatrixXd::Identity(vfis_size,vfis_size), -1.0*MatrixXd::Identity(vfis_size,vfis_size);
+        MatrixXd W_s_limits_e(2*vfis_size, m);
+        W_s_limits_e <<  MatrixXd::Zero(2*vfis_size,n), W_s_limits;
+
+        MatrixXd W_q_e(4*n+3*vfis_size,m);
+        W_q_e << W_q_dot_limits_e, W_q_limits_e, W_vfi_q_e, W_s_limits_e;
+
+        VectorXd w_s_limits(2*vfis_size);
+        VectorXd s_max = VectorXd::Zero(vfis_size); // REPLACE
+        w_s_limits << s_max, VectorXd::Zero(vfis_size);
+        VectorXd w_q_e(4*n+w_vfi.size()+2*vfis_size);
+        w_q_e << w_q, w_s_limits;
+
+        VectorXd uq_e = VectorXd::Zero(m);
+        uq_e = task_space_solver_.solve_quadratic_program(2.0*Hx_e, fx_e, W_q_e, w_q_e, MatrixXd::Zero(0,0), VectorXd(0));
+
+        std::cerr << "uq = " << uq << std::endl;
+        std::cerr << "uq_e = " << uq_e << std::endl;
     }
 
 
