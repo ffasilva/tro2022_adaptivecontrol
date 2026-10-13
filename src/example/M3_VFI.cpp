@@ -138,7 +138,7 @@ void M3_VFI::initialize()
 
 /**
  * @brief Initialize dynamic VFI constraints. Currently only supports dynamic geometric primitives attached to a robot.
- * @param robot_ptr A std::shared_ptr to a DQ_SerialManipulator object representing the robot.
+ * @param robot_ptr A std::shared_ptr to a DQ_Kinematics object representing the robot.
  * @param q A VectorXd representing the robot's configuration.
  */
 void M3_VFI::initialize_dynamic_geometric_primitives(std::shared_ptr<DQ_Kinematics> robot_ptr,
@@ -181,7 +181,7 @@ void M3_VFI::initialize_dynamic_geometric_primitives(std::shared_ptr<DQ_Kinemati
 
 /**
  * @brief Update a dynamic geometric primitive. Currently only supports dynamic geometric primitives attached to a robot.
- * @param robot_ptr A std::shared_ptr to a DQ_SerialManipulator object representing the robot.
+ * @param robot_ptr A std::shared_ptr to a DQ_Kinematics object representing the robot.
  * @param q A VectorXd representing the robot's configuration.
  */
 void M3_VFI::update_dynamic_geometric_primitives(std::shared_ptr<DQ_Kinematics> robot_ptr,
