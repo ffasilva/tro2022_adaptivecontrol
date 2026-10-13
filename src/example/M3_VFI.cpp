@@ -32,8 +32,6 @@ Contributors (aside from author):
  * doi: 10.1109/TRO.2022.3181047.
  */
 
-
-#include <dqrobotics/robot_modeling/DQ_Kinematics.h>
 #include <dqrobotics/utils/DQ_Geometry.h>
 #include <dqrobotics/internal/_dq_linesegment.h>
 #include "marinholab/papers/tro2022/adaptive_control/M3_VFI.h"
@@ -143,7 +141,7 @@ void M3_VFI::initialize()
  * @param robot_ptr A std::shared_ptr to a DQ_SerialManipulator object representing the robot.
  * @param q A VectorXd representing the robot's configuration.
  */
-void M3_VFI::initialize_dynamic_geometric_primitives(std::shared_ptr<DQ_SerialManipulator> robot_ptr,
+void M3_VFI::initialize_dynamic_geometric_primitives(std::shared_ptr<DQ_Kinematics> robot_ptr,
                                                      const VectorXd &q)
 {
     //Reference pose is desired
@@ -186,7 +184,7 @@ void M3_VFI::initialize_dynamic_geometric_primitives(std::shared_ptr<DQ_SerialMa
  * @param robot_ptr A std::shared_ptr to a DQ_SerialManipulator object representing the robot.
  * @param q A VectorXd representing the robot's configuration.
  */
-void M3_VFI::update_dynamic_geometric_primitives(std::shared_ptr<DQ_SerialManipulator> robot_ptr,
+void M3_VFI::update_dynamic_geometric_primitives(std::shared_ptr<DQ_Kinematics> robot_ptr,
                                                  const VectorXd &q)
 {
     const DQ& local_x = (robot_ptr->fkm(q, joint_index_))*relative_displacement_to_primitive_;
@@ -499,3 +497,4 @@ std::string M3_VFI::get_vfi_name() const
 {
     return workspace_entity_name_ + std::string("___") + robot_entity_name_;
 }
+
