@@ -33,7 +33,7 @@ Contributors (aside from author):
 #include<tuple>
 
 #include<dqrobotics/DQ.h>
-#include<dqrobotics/solvers/DQ_QPOASESSolver.h>
+#include <marinholab/solvers/qpoases.h>
 #include<dqrobotics/robot_control/DQ_KinematicController.h>
 
 #include"marinholab/papers/tro2022/adaptive_control/M3_SerialManipulatorEDH.h"
@@ -42,6 +42,8 @@ Contributors (aside from author):
 
 using namespace Eigen;
 using namespace DQ_robotics;
+
+namespace qpoases = marinholab::solvers::qpoases;
 
 enum class Example_AdaptiveControlStrategy
 {
@@ -58,6 +60,7 @@ struct Example_SimulationParameters
     double proportional_adaptation_gain;
     double vfi_gain;
     double vfi_weight;
+    double vfi_beta;
     double damping;
     double sampling_time_sec;
     double reference_timeout_sec;
@@ -79,8 +82,9 @@ private:
     DQ attached_primitive_;
     DQ target_primitive_;
 
-    DQ_QPOASESSolver task_space_solver_;
-    DQ_QPOASESSolver parameter_space_solver_;
+    qpoases::Configuration config_;
+    qpoases::Solver task_space_solver_;
+    qpoases::Solver parameter_space_solver_;
 
     std::tuple<VectorXd,double> _closest_invariant_task_error(const DQ& x, const DQ& xd, const M3_MeasureSpace& measure_space) const;
     MatrixXd _get_task_jacobian(const VectorXd& q, const DQ& xd) const;
