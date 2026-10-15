@@ -88,6 +88,7 @@ class M3_VFI
     DQ value_;
     std::shared_ptr<DQ_CoppeliaSimInterface> vi_;
     double safe_distance_;
+    double buffer_distance_;
     M3_VFI_Direction vfi_direction_;
     const int joint_index_; //Needs to be correctly implemented in the future
     const DQ relative_displacement_to_joint_;
@@ -107,6 +108,7 @@ public:
                     const M3_VFI_Direction& vfi_direction,
                     const int& joint_index,
                     const DQ& relative_displacement_to_joint,
+                    const double& buffer_distance=0.0,
                     const std::string& cs_reference_name="");
 
     M3_VFI(const M3_Primitive& type,
@@ -117,6 +119,7 @@ public:
            std::shared_ptr<M3_VFI> start_point,
            std::shared_ptr<M3_VFI> end_point,
            const DQ& relative_displacement_to_joint,
+           const double& buffer_distance=0.0,
            const std::string& cs_reference_name="");
 
     void initialize();
@@ -140,6 +143,8 @@ public:
     double get_distance_error(const DQ& x) const;
 
     double get_safe_distance() const;
+
+    double get_buffer_distance() const;
 
     M3_VFI_DistanceType get_distance_type() const;
 

@@ -22,6 +22,10 @@ Author:
 Contributors (aside from author):
     Frederico Fernandes Afonso Silva (frederico.silva@manchester.ac.uk)
         - Add cylinder VFI and associated methods
+        - Add buffered VFIs to deal with discretization problems. Reference:
+            Daniel S. J. Derwent, Simon Watson, Bruno V. Adorno, 'A receding-horizon
+            multi-contact motion planner for legged robots in challenging environments'.
+            2026. https://arxiv.org/pdf/2602.11113
 */
 
 /**
@@ -44,12 +48,14 @@ M3_VFI::M3_VFI(const std::string &workspace_entity_name,
                const M3_VFI_Direction &vfi_direction,
                const int &joint_index,
                const DQ &relative_displacement_to_joint,
+               const double& buffer_distance,
                const std::string &cs_reference_name):
     workspace_entity_name_(workspace_entity_name),
     robot_entity_name_(robot_entity_name),
     type_(type),
     vi_(vi),
     safe_distance_(safe_distance),
+    buffer_distance_(buffer_distance),
     vfi_direction_(vfi_direction),
     joint_index_(joint_index),
     relative_displacement_to_joint_(relative_displacement_to_joint),
@@ -70,9 +76,11 @@ M3_VFI::M3_VFI(const M3_Primitive &type,
                std::shared_ptr<M3_VFI> start_point,
                std::shared_ptr<M3_VFI> end_point,
                const DQ &relative_displacement_to_joint,
+               const double& buffer_distance,
                const std::string &cs_reference_name):
 vi_(vi),
 safe_distance_(safe_distance),
+buffer_distance_(buffer_distance),
 vfi_direction_(vfi_direction),
 joint_index_(0), // placeholder initialization of const int joint_index_
 relative_displacement_to_joint_(relative_displacement_to_joint),
@@ -429,6 +437,11 @@ double M3_VFI::get_distance_error(const DQ &x) const
 double M3_VFI::get_safe_distance() const
 {
     return safe_distance_;
+}
+
+double M3_VFI::get_buffer_distance() const
+{
+    return buffer_distance_;
 }
 
 
