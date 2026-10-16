@@ -456,6 +456,7 @@ std::tuple<VectorXd, VectorXd, VectorXd, VectorXd, DQ> M3_AdaptiveController::co
     ///VFI state that is independent of control strategy
     const int& vfis_size = static_cast<int>(vfis.size());
     VectorXd w_vfi(vfis_size);
+    bool using_buffered_vfis = false;
     for(int i=0;i<vfis_size;i++)
     {
         M3_VFI& vfi = vfis[i];
@@ -486,6 +487,18 @@ std::tuple<VectorXd, VectorXd, VectorXd, VectorXd, DQ> M3_AdaptiveController::co
         vfi.set_last_estimated_distance(x_hat);
         if(y != DQ(0))
             vfi.set_last_real_distance(y);
+
+        const double bd = vfi.get_buffer_distance();
+        if (vfi.get_buffer_distance() != 0.0){
+            if (vfi.get_vfi_direction() == M3_VFI_Direction::FORBIDDEN_ZONE){
+                w_vfi(i) -= bd;
+            }else if (vfi.get_vfi_direction() == M3_VFI_Direction::SAFE_ZONE){
+                w_vfi(i) += bd;
+            }else{
+                throw std::runtime_error("Expected valid VFI direction.");
+            }
+            using_buffered_vfis = true;
+        }
     }
 
     if(control_strategy == Example_AdaptiveControlStrategy::FULL || control_strategy == Example_AdaptiveControlStrategy::TASK_ONLY)
@@ -506,14 +519,10 @@ std::tuple<VectorXd, VectorXd, VectorXd, VectorXd, DQ> M3_AdaptiveController::co
 
         ///Inequality constraint for VFIs
         MatrixXd W_vfi_q(vfis_size, n);
-        bool using_buffered_vfis = false;
         for(int i=0;i<vfis_size;i++)
         {
             M3_VFI& vfi = vfis[i];
             W_vfi_q.row(i) = vfi.get_vfi_matrix(x_hat, J_x_q);
-
-            if (vfi.get_buffer_distance() != 0.0)
-                using_buffered_vfis = true;
         }
 
         MatrixXd W_q_limits;
@@ -556,7 +565,13 @@ std::tuple<VectorXd, VectorXd, VectorXd, VectorXd, DQ> M3_AdaptiveController::co
 
                 const double d_tilde = vfi.get_distance(x_hat);
                 const double b = vfi.get_buffer_distance();
-                s_max(i) = std::max(0.0, -vfi_gain*vfi_weight*(d_tilde - b));
+                if (vfi.get_vfi_direction() == M3_VFI_Direction::FORBIDDEN_ZONE){
+                    s_max(i) = std::max(0.0, -vfi_gain*vfi_weight*(d_tilde - b));
+                }else if (vfi.get_vfi_direction() == M3_VFI_Direction::SAFE_ZONE){
+                    s_max(i) = std::max(0.0, vfi_gain*vfi_weight*(d_tilde + b));
+                }else{
+                    throw std::runtime_error("Expected valid VFI direction.");
+                }
             }
             w_s_limits << s_max, VectorXd::Zero(vfis_size);
             VectorXd w_q_e(4*n+w_vfi.size()+2*vfis_size);
@@ -600,14 +615,10 @@ std::tuple<VectorXd, VectorXd, VectorXd, VectorXd, DQ> M3_AdaptiveController::co
         const VectorXd b_y = VectorXd::Zero(1);
 
         MatrixXd W_vfi_a(vfis_size, p);
-        bool using_buffered_vfis = false;
         for(int i=0; i<vfis_size; i++)
         {
             const M3_VFI& vfi = vfis.at(i);
             W_vfi_a.row(i) = vfi.get_vfi_matrix(x_hat, J_y_a);
-
-            if (vfi.get_buffer_distance() != 0.0)
-                using_buffered_vfis = true;
         }
 
         ///Inequality constraint for parameter limits
@@ -657,7 +668,13 @@ std::tuple<VectorXd, VectorXd, VectorXd, VectorXd, DQ> M3_AdaptiveController::co
 
                     const double d_tilde = vfi.get_distance(x_hat);
                     const double b = vfi.get_buffer_distance();
-                    s_max(i) = std::max(0.0, -vfi_gain*(1.0 - vfi_weight)*(d_tilde - b));
+                    if (vfi.get_vfi_direction() == M3_VFI_Direction::FORBIDDEN_ZONE){
+                        s_max(i) = std::max(0.0, -vfi_gain*(1.0 - vfi_weight)*(d_tilde - b));
+                    }else if (vfi.get_vfi_direction() == M3_VFI_Direction::SAFE_ZONE){
+                        s_max(i) = std::max(0.0, vfi_gain*(1.0 - vfi_weight)*(d_tilde + b));
+                    }else{
+                        throw std::runtime_error("Expected valid VFI direction.");
+                    }
                 }
                 w_s_limits << s_max, VectorXd::Zero(vfis_size);
                 VectorXd w_a_hat_e(w_a_hat.size()+2*vfis_size);
