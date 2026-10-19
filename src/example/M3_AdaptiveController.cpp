@@ -563,7 +563,7 @@ std::tuple<VectorXd, VectorXd, VectorXd, VectorXd, DQ> M3_AdaptiveController::co
             for(int i=0;i<vfis_size;i++){
                 M3_VFI& vfi = vfis[i];
 
-                const double d_tilde = vfi.get_distance(x_hat);
+                const double d_tilde = vfi.get_distance_error(x_hat);
                 const double b = vfi.get_buffer_distance();
                 if (vfi.get_vfi_direction() == M3_VFI_Direction::FORBIDDEN_ZONE){
                     s_max(i) = std::max(0.0, -vfi_gain*vfi_weight*(d_tilde - b));
@@ -666,7 +666,7 @@ std::tuple<VectorXd, VectorXd, VectorXd, VectorXd, DQ> M3_AdaptiveController::co
                 for(int i=0;i<vfis_size;i++){
                     M3_VFI& vfi = vfis[i];
 
-                    const double d_tilde = vfi.get_distance(x_hat);
+                    const double d_tilde = vfi.get_distance_error(x_hat);
                     const double b = vfi.get_buffer_distance();
                     if (vfi.get_vfi_direction() == M3_VFI_Direction::FORBIDDEN_ZONE){
                         s_max(i) = std::max(0.0, -vfi_gain*(1.0 - vfi_weight)*(d_tilde - b));
