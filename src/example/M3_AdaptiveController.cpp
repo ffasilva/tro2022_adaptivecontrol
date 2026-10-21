@@ -20,7 +20,11 @@ Author:
     Murilo M. Marinho (murilomarinho@ieee.org)
 
 Contributors (aside from author):
-    None
+    Frederico Fernandes Afonso Silva (frederico.silva@manchester.ac.uk)
+        - Add buffered VFIs to deal with discretization problems. Reference:
+            Daniel S. J. Derwent, Simon Watson, Bruno V. Adorno, 'A receding-horizon
+            multi-contact motion planner for legged robots in challenging environments'.
+            2026. https://arxiv.org/pdf/2602.11113
 */
 /**
  * Example code for:
@@ -544,21 +548,44 @@ std::tuple<VectorXd, VectorXd, VectorXd, VectorXd, DQ> M3_AdaptiveController::co
             VectorXd fx_e(m);
             fx_e << fx, VectorXd::Zero(vfis_size);
 
-            MatrixXd W_q_dot_limits_e(2*n, m);
-            W_q_dot_limits_e << W_q_dot_limits, MatrixXd::Zero(2*n,vfis_size);
-            MatrixXd W_q_limits_e(2*n, m);
-            W_q_limits_e << W_q_limits, MatrixXd::Zero(2*n,vfis_size);
-            MatrixXd W_vfi_q_e(vfis_size, m);
-            W_vfi_q_e << W_vfi_q, -1*MatrixXd::Identity(vfis_size,vfis_size);
-            MatrixXd W_s_limits(2*vfis_size, vfis_size);
-            W_s_limits << MatrixXd::Identity(vfis_size,vfis_size), -1.0*MatrixXd::Identity(vfis_size,vfis_size);
-            MatrixXd W_s_limits_e(2*vfis_size, m);
-            W_s_limits_e <<  MatrixXd::Zero(2*vfis_size,n), W_s_limits;
+            // MatrixXd W_q_dot_limits_e(2*n, m);
+            // W_q_dot_limits_e << W_q_dot_limits, MatrixXd::Zero(2*n,vfis_size);
+            // MatrixXd W_q_limits_e(2*n, m);
+            // W_q_limits_e << W_q_limits, MatrixXd::Zero(2*n,vfis_size);
+            // MatrixXd W_vfi_q_e(vfis_size, m);
+            // W_vfi_q_e << W_vfi_q, -1*MatrixXd::Identity(vfis_size,vfis_size);
+            // MatrixXd W_s_limits(2*vfis_size, vfis_size);
+            // W_s_limits << MatrixXd::Identity(vfis_size,vfis_size), -1.0*MatrixXd::Identity(vfis_size,vfis_size);
+            // MatrixXd W_s_limits_e(2*vfis_size, m);
+            // W_s_limits_e <<  MatrixXd::Zero(2*vfis_size,n), W_s_limits;
 
-            MatrixXd W_q_e(4*n+3*vfis_size,m);
+
+            // MatrixXd W_q_e(4*n+3*vfis_size,m);
+            // W_q_e << W_q_dot_limits_e, W_q_limits_e, W_vfi_q_e, W_s_limits_e;
+
+            MatrixXd W_q_dot_limits_e(2*m, m);
+            W_q_dot_limits_e << W_q_dot_limits.block(0,0,n,n), MatrixXd::Zero(n,vfis_size), // m.block(0,0,n,n): extracts an nxn block matrix starting at row 0 and colunm 0 of m
+                                  MatrixXd::Zero(vfis_size,n), MatrixXd::Zero(vfis_size,vfis_size),
+                                W_q_dot_limits.block(n,0,n,n), MatrixXd::Zero(n,vfis_size),
+                                  MatrixXd::Zero(vfis_size,n), MatrixXd::Zero(vfis_size,vfis_size);
+            MatrixXd W_q_limits_e(2*m, m);
+            W_q_limits_e <<   W_q_limits.block(0,0,n,n), MatrixXd::Zero(n,vfis_size),
+                            MatrixXd::Zero(vfis_size,n), MatrixXd::Zero(vfis_size,vfis_size),
+                              W_q_limits.block(n,0,n,n), MatrixXd::Zero(n,vfis_size),
+                            MatrixXd::Zero(vfis_size,n), MatrixXd::Zero(vfis_size,vfis_size);
+            MatrixXd W_vfi_q_e(2*vfis_size, m);
+            W_vfi_q_e << W_vfi_q.block(0,0,vfis_size,n),        MatrixXd::Zero(vfis_size,vfis_size),
+                            MatrixXd::Zero(vfis_size,n), -1*MatrixXd::Identity(vfis_size,vfis_size);
+            MatrixXd W_s_limits_e(2*m, m);
+            W_s_limits_e <<         MatrixXd::Zero(n,n),          MatrixXd::Zero(n,vfis_size),
+                            MatrixXd::Zero(vfis_size,n),      MatrixXd::Identity(vfis_size,vfis_size),
+                                    MatrixXd::Zero(n,n),          MatrixXd::Zero(n,vfis_size),
+                            MatrixXd::Zero(vfis_size,n), -1.0*MatrixXd::Identity(vfis_size,vfis_size);
+
+            MatrixXd W_q_e(6*m+2*vfis_size,m);
             W_q_e << W_q_dot_limits_e, W_q_limits_e, W_vfi_q_e, W_s_limits_e;
 
-            VectorXd w_s_limits(2*vfis_size);
+            // VectorXd w_s_limits(2*vfis_size);
             VectorXd s_max = VectorXd::Zero(vfis_size);
             for(int i=0;i<vfis_size;i++){
                 M3_VFI& vfi = vfis[i];
@@ -573,9 +600,21 @@ std::tuple<VectorXd, VectorXd, VectorXd, VectorXd, DQ> M3_AdaptiveController::co
                     throw std::runtime_error("Expected valid VFI direction.");
                 }
             }
-            w_s_limits << s_max, VectorXd::Zero(vfis_size);
-            VectorXd w_q_e(4*n+w_vfi.size()+2*vfis_size);
-            w_q_e << w_q, w_s_limits;
+            // w_s_limits << s_max, VectorXd::Zero(vfis_size);
+            // VectorXd w_q_e(4*n+w_vfi.size()+2*vfis_size);
+            // w_q_e << w_q, w_q_limits;
+
+            VectorXd w_q_dot_limits_e(2*m);
+            w_q_dot_limits_e << w_q_dot_limits.head(n), VectorXd::Zero(vfis_size), w_q_dot_limits.tail(n), VectorXd::Zero(vfis_size);
+            VectorXd w_q_limits_e(2*m);
+            w_q_limits_e << w_q_limits.head(n), VectorXd::Zero(vfis_size), w_q_limits.tail(n), VectorXd::Zero(vfis_size);
+            VectorXd w_vfi_e(2*vfis_size);
+            w_vfi_e << vfi_gain*vfi_weight*w_vfi, VectorXd::Zero(vfis_size);
+            VectorXd w_s_limits(2*m);
+            w_s_limits << VectorXd::Zero(n), s_max, VectorXd::Zero(n), VectorXd::Zero(vfis_size);
+
+            VectorXd w_q_e(6*m+2*vfis_size);
+            w_q_e << w_q_dot_limits_e, w_q_limits_e, w_vfi_e, w_s_limits;
 
             VectorXd uq_e = VectorXd::Zero(m);
             uq_e = task_space_solver_.solve_quadratic_program(2.0*Hx_e, fx_e, W_q_e, w_q_e, MatrixXd::Zero(0,0), VectorXd(0));
@@ -647,21 +686,40 @@ std::tuple<VectorXd, VectorXd, VectorXd, VectorXd, DQ> M3_AdaptiveController::co
                 VectorXd fy_e(m);
                 fy_e << fy, VectorXd::Zero(vfis_size);
 
-                MatrixXd A_y_e(A_y.rows(), m);
-                A_y_e << A_y, MatrixXd::Zero(A_y.rows(),vfis_size);
-                MatrixXd W_a_hat_limits_e(W_a_hat_limits.rows(), m);
-                W_a_hat_limits_e << W_a_hat_limits, MatrixXd::Zero(W_a_hat_limits.rows(),vfis_size);
-                MatrixXd W_vfi_a_e(vfis_size, m);
-                W_vfi_a_e << W_vfi_a, -1*MatrixXd::Identity(vfis_size,vfis_size);
-                MatrixXd W_s_limits(2*vfis_size, vfis_size);
-                W_s_limits << MatrixXd::Identity(vfis_size,vfis_size), -1.0*MatrixXd::Identity(vfis_size,vfis_size);
-                MatrixXd W_s_limits_e(2*vfis_size, m);
-                W_s_limits_e <<  MatrixXd::Zero(2*vfis_size,p), W_s_limits;
+                // MatrixXd A_y_e(A_y.rows(), m);
+                // A_y_e << A_y, MatrixXd::Zero(A_y.rows(),vfis_size);
+                // MatrixXd W_a_hat_limits_e(W_a_hat_limits.rows(), m);
+                // W_a_hat_limits_e << W_a_hat_limits, MatrixXd::Zero(W_a_hat_limits.rows(),vfis_size);
+                // MatrixXd W_vfi_a_e(vfis_size, m);
+                // W_vfi_a_e << W_vfi_a, -1*MatrixXd::Identity(vfis_size,vfis_size);
+                // MatrixXd W_s_limits(2*vfis_size, vfis_size);
+                // W_s_limits << MatrixXd::Identity(vfis_size,vfis_size), -1.0*MatrixXd::Identity(vfis_size,vfis_size);
+                // MatrixXd W_s_limits_e(2*vfis_size, m);
+                // W_s_limits_e <<  MatrixXd::Zero(2*vfis_size,p), W_s_limits;
 
-                MatrixXd W_a_hat_e(A_y_e.rows()+W_a_hat_limits_e.rows()+W_vfi_a_e.rows()+W_s_limits_e.rows(),m);
+                // MatrixXd W_a_hat_e(A_y_e.rows()+W_a_hat_limits_e.rows()+W_vfi_a_e.rows()+W_s_limits_e.rows(),m);
+                // W_a_hat_e << A_y_e, W_a_hat_limits_e, W_vfi_a_e, W_s_limits_e;
+
+                MatrixXd A_y_e(1, m);
+                A_y_e << A_y, MatrixXd::Zero(1,vfis_size);
+                MatrixXd W_a_hat_limits_e(2*m, m);
+                W_a_hat_limits_e << W_a_hat_limits.block(0,0,p,p),         MatrixXd::Zero(p,vfis_size),
+                                      MatrixXd::Zero(vfis_size,p), MatrixXd::Zero(vfis_size,vfis_size),
+                                    W_a_hat_limits.block(p,0,p,p),         MatrixXd::Zero(p,vfis_size),
+                                      MatrixXd::Zero(vfis_size,p), MatrixXd::Zero(vfis_size,vfis_size);
+                MatrixXd W_vfi_a_e(2*vfis_size, m);
+                W_vfi_a_e << W_vfi_a.block(0,0,vfis_size,p),        MatrixXd::Zero(vfis_size,vfis_size),
+                                MatrixXd::Zero(vfis_size,p), -1*MatrixXd::Identity(vfis_size,vfis_size);
+                MatrixXd W_s_limits_e(2*m, m);
+                W_s_limits_e <<         MatrixXd::Zero(p,p),                  MatrixXd::Zero(p,vfis_size),
+                                MatrixXd::Zero(vfis_size,p),      MatrixXd::Identity(vfis_size,vfis_size),
+                                        MatrixXd::Zero(p,p),                  MatrixXd::Zero(p,vfis_size),
+                                MatrixXd::Zero(vfis_size,p), -1.0*MatrixXd::Identity(vfis_size,vfis_size);
+
+                MatrixXd W_a_hat_e(1+4*m+2*vfis_size,m);
                 W_a_hat_e << A_y_e, W_a_hat_limits_e, W_vfi_a_e, W_s_limits_e;
 
-                VectorXd w_s_limits(2*vfis_size);
+                // VectorXd w_s_limits(2*vfis_size);
                 VectorXd s_max = VectorXd::Zero(vfis_size);
                 for(int i=0;i<vfis_size;i++){
                     M3_VFI& vfi = vfis[i];
@@ -676,9 +734,21 @@ std::tuple<VectorXd, VectorXd, VectorXd, VectorXd, DQ> M3_AdaptiveController::co
                         throw std::runtime_error("Expected valid VFI direction.");
                     }
                 }
-                w_s_limits << s_max, VectorXd::Zero(vfis_size);
-                VectorXd w_a_hat_e(w_a_hat.size()+2*vfis_size);
-                w_a_hat_e << w_a_hat, w_s_limits;
+                // w_s_limits << s_max, VectorXd::Zero(vfis_size);
+                // VectorXd w_a_hat_e(w_a_hat.size()+2*vfis_size);
+                // w_a_hat_e << w_a_hat, w_s_limits;
+
+                // VectorXd b_y_e(2);
+                // b_y_e << b_y, VectorXd::Zero(1);
+                VectorXd w_a_hat_limits_e(2*m);
+                w_a_hat_limits_e << w_a_hat_limits.head(p), VectorXd::Zero(vfis_size), w_a_hat_limits.tail(p), VectorXd::Zero(vfis_size);
+                VectorXd w_vfi_e(2*vfis_size);
+                w_vfi_e << vfi_gain*(1.0 - vfi_weight)*w_vfi, VectorXd::Zero(vfis_size);
+                VectorXd w_s_limits(2*m);
+                w_s_limits << VectorXd::Zero(p), s_max, VectorXd::Zero(p), VectorXd::Zero(vfis_size);
+
+                VectorXd w_a_hat_e(1+4*m+2*vfis_size);
+                w_a_hat_e << b_y, w_a_hat_limits_e, w_vfi_e, w_s_limits;
 
                 // config_.set("maximum_working_set_recalculations", 300); // default is 150 in solver-qpoases
                 // // config_.set("enableRegularisation", true);
