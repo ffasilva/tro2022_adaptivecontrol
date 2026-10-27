@@ -25,6 +25,8 @@ Contributors (aside from author):
             Daniel S. J. Derwent, Simon Watson, Bruno V. Adorno, 'A receding-horizon
             multi-contact motion planner for legged robots in challenging environments'.
             2026. https://arxiv.org/pdf/2602.11113
+        - Fix order of the optimization problems and make sure the task controller uses
+        the updated adapted parameters.
 */
 /**
  * Example code for:
@@ -505,125 +507,6 @@ std::tuple<VectorXd, VectorXd, VectorXd, VectorXd, DQ> M3_AdaptiveController::co
         }
     }
 
-    if(control_strategy == Example_AdaptiveControlStrategy::FULL || control_strategy == Example_AdaptiveControlStrategy::TASK_ONLY)
-    {
-        ///Task
-        const MatrixXd J_x_q = robot_->pose_jacobian(q);
-        const MatrixXd N_x_q = this->_get_task_jacobian(q, xd);
-
-        const MatrixXd Hx = (N_x_q.transpose()*N_x_q + lambda*MatrixXd::Identity(n,n));
-        const VectorXd fx = 2.*N_x_q.transpose()*eta_task*x_tilde;
-
-        //I*q <= q_dot_upper
-        //I*q >= q_dot_lower <=> -I*q <= -q_dot_lower
-        MatrixXd W_q_dot_limits(2*n, n); W_q_dot_limits << MatrixXd::Identity(n,n), -1.0*MatrixXd::Identity(n,n);
-        VectorXd w_q_dot_limits(2*n);    w_q_dot_limits << robot_->get_upper_q_dot_limit(), -1.0*robot_->get_lower_q_dot_limit();
-
-        const int& vfis_size = static_cast<int>(vfis.size());
-
-        ///Inequality constraint for VFIs
-        MatrixXd W_vfi_q(vfis_size, n);
-        for(int i=0;i<vfis_size;i++)
-        {
-            M3_VFI& vfi = vfis[i];
-            W_vfi_q.row(i) = vfi.get_vfi_matrix(x_hat, J_x_q);
-        }
-
-        MatrixXd W_q_limits;
-        VectorXd w_q_limits;
-        std::tie(W_q_limits, w_q_limits) = get_variable_boundary_inequalities(q,
-                                                                              {robot_->get_lower_q_limit(),
-                                                                               robot_->get_upper_q_limit()});
-
-        MatrixXd W_q(4*n+W_vfi_q.rows(),n);W_q << W_q_dot_limits, W_q_limits, W_vfi_q;
-        VectorXd w_q(4*n+w_vfi.size()); w_q << w_q_dot_limits, w_q_limits, vfi_gain*vfi_weight*w_vfi;
-
-        if (!using_buffered_vfis){
-            uq = task_space_solver_.solve_quadratic_program(2.0*Hx, fx, W_q, w_q, MatrixXd::Zero(0,0), VectorXd(0));
-        }else{
-            const int m = n + vfis_size;
-            MatrixXd Hx_e(m,m);
-            Hx_e <<                          Hx,                  MatrixXd::Zero(n,vfis_size),
-                    MatrixXd::Zero(vfis_size,n), vfi_beta*MatrixXd::Identity(vfis_size,vfis_size);
-            VectorXd fx_e(m);
-            fx_e << fx, VectorXd::Zero(vfis_size);
-
-            // MatrixXd W_q_dot_limits_e(2*n, m);
-            // W_q_dot_limits_e << W_q_dot_limits, MatrixXd::Zero(2*n,vfis_size);
-            // MatrixXd W_q_limits_e(2*n, m);
-            // W_q_limits_e << W_q_limits, MatrixXd::Zero(2*n,vfis_size);
-            // MatrixXd W_vfi_q_e(vfis_size, m);
-            // W_vfi_q_e << W_vfi_q, -1*MatrixXd::Identity(vfis_size,vfis_size);
-            // MatrixXd W_s_limits(2*vfis_size, vfis_size);
-            // W_s_limits << MatrixXd::Identity(vfis_size,vfis_size), -1.0*MatrixXd::Identity(vfis_size,vfis_size);
-            // MatrixXd W_s_limits_e(2*vfis_size, m);
-            // W_s_limits_e <<  MatrixXd::Zero(2*vfis_size,n), W_s_limits;
-
-
-            // MatrixXd W_q_e(4*n+3*vfis_size,m);
-            // W_q_e << W_q_dot_limits_e, W_q_limits_e, W_vfi_q_e, W_s_limits_e;
-
-            MatrixXd W_q_dot_limits_e(2*m, m);
-            W_q_dot_limits_e << W_q_dot_limits.block(0,0,n,n), MatrixXd::Zero(n,vfis_size), // m.block(0,0,n,n): extracts an nxn block matrix starting at row 0 and colunm 0 of m
-                                  MatrixXd::Zero(vfis_size,n), MatrixXd::Zero(vfis_size,vfis_size),
-                                W_q_dot_limits.block(n,0,n,n), MatrixXd::Zero(n,vfis_size),
-                                  MatrixXd::Zero(vfis_size,n), MatrixXd::Zero(vfis_size,vfis_size);
-            MatrixXd W_q_limits_e(2*m, m);
-            W_q_limits_e <<   W_q_limits.block(0,0,n,n), MatrixXd::Zero(n,vfis_size),
-                            MatrixXd::Zero(vfis_size,n), MatrixXd::Zero(vfis_size,vfis_size),
-                              W_q_limits.block(n,0,n,n), MatrixXd::Zero(n,vfis_size),
-                            MatrixXd::Zero(vfis_size,n), MatrixXd::Zero(vfis_size,vfis_size);
-            MatrixXd W_vfi_q_e(2*vfis_size, m);
-            W_vfi_q_e << W_vfi_q.block(0,0,vfis_size,n),        MatrixXd::Zero(vfis_size,vfis_size),
-                            MatrixXd::Zero(vfis_size,n), -1*MatrixXd::Identity(vfis_size,vfis_size);
-            MatrixXd W_s_limits_e(2*m, m);
-            W_s_limits_e <<         MatrixXd::Zero(n,n),          MatrixXd::Zero(n,vfis_size),
-                            MatrixXd::Zero(vfis_size,n),      MatrixXd::Identity(vfis_size,vfis_size),
-                                    MatrixXd::Zero(n,n),          MatrixXd::Zero(n,vfis_size),
-                            MatrixXd::Zero(vfis_size,n), -1.0*MatrixXd::Identity(vfis_size,vfis_size);
-
-            MatrixXd W_q_e(6*m+2*vfis_size,m);
-            W_q_e << W_q_dot_limits_e, W_q_limits_e, W_vfi_q_e, W_s_limits_e;
-
-            // VectorXd w_s_limits(2*vfis_size);
-            VectorXd s_max = VectorXd::Zero(vfis_size);
-            for(int i=0;i<vfis_size;i++){
-                M3_VFI& vfi = vfis[i];
-
-                const double d_tilde = vfi.get_distance_error(x_hat);
-                const double b = vfi.get_buffer_distance();
-                if (vfi.get_vfi_direction() == M3_VFI_Direction::FORBIDDEN_ZONE){
-                    s_max(i) = std::max(0.0, -vfi_gain*vfi_weight*(d_tilde - b));
-                }else if (vfi.get_vfi_direction() == M3_VFI_Direction::SAFE_ZONE){
-                    s_max(i) = std::max(0.0, vfi_gain*vfi_weight*(d_tilde + b));
-                }else{
-                    throw std::runtime_error("Expected valid VFI direction.");
-                }
-            }
-            // w_s_limits << s_max, VectorXd::Zero(vfis_size);
-            // VectorXd w_q_e(4*n+w_vfi.size()+2*vfis_size);
-            // w_q_e << w_q, w_q_limits;
-
-            VectorXd w_q_dot_limits_e(2*m);
-            w_q_dot_limits_e << w_q_dot_limits.head(n), VectorXd::Zero(vfis_size), w_q_dot_limits.tail(n), VectorXd::Zero(vfis_size);
-            VectorXd w_q_limits_e(2*m);
-            w_q_limits_e << w_q_limits.head(n), VectorXd::Zero(vfis_size), w_q_limits.tail(n), VectorXd::Zero(vfis_size);
-            VectorXd w_vfi_e(2*vfis_size);
-            w_vfi_e << vfi_gain*vfi_weight*w_vfi, VectorXd::Zero(vfis_size);
-            VectorXd w_s_limits(2*m);
-            w_s_limits << VectorXd::Zero(n), s_max, VectorXd::Zero(n), VectorXd::Zero(vfis_size);
-
-            VectorXd w_q_e(6*m+2*vfis_size);
-            w_q_e << w_q_dot_limits_e, w_q_limits_e, w_vfi_e, w_s_limits;
-
-            VectorXd uq_e = VectorXd::Zero(m);
-            uq_e = task_space_solver_.solve_quadratic_program(2.0*Hx_e, fx_e, W_q_e, w_q_e, MatrixXd::Zero(0,0), VectorXd(0));
-
-            uq = uq_e.head(n);
-        }
-    }
-
-
     VectorXd ua = VectorXd::Zero(p);
     VectorXd y_tilde;
     DQ y_partial;
@@ -759,6 +642,11 @@ std::tuple<VectorXd, VectorXd, VectorXd, VectorXd, DQ> M3_AdaptiveController::co
 
                 ua = ua_e.head(p);
             }
+
+            // Update robot parameters before solving the task optimization problem
+            VectorXd a_hat(robot_->get_parameter_space_values());
+            a_hat += ua*simulation_arguments_.sampling_time_sec;
+            robot_->set_parameter_space_values(a_hat);
         }
         catch(const std::exception& e)
         {
@@ -766,6 +654,124 @@ std::tuple<VectorXd, VectorXd, VectorXd, VectorXd, DQ> M3_AdaptiveController::co
             std::cerr << "Hy size = (" << Hy.rows() << "," << Hy.cols() << ")." << std::endl;
             FullPivLU<MatrixXd> Hy_lu_decomp(Hy);
             std::cerr << "Hy rank = (" << Hy_lu_decomp.rank() << ")." << std::endl;
+        }
+    }
+
+    if(control_strategy == Example_AdaptiveControlStrategy::FULL || control_strategy == Example_AdaptiveControlStrategy::TASK_ONLY)
+    {
+        ///Task
+        const MatrixXd J_x_q = robot_->pose_jacobian(q);
+        const MatrixXd N_x_q = this->_get_task_jacobian(q, xd);
+
+        const MatrixXd Hx = (N_x_q.transpose()*N_x_q + lambda*MatrixXd::Identity(n,n));
+        const VectorXd fx = 2.*N_x_q.transpose()*eta_task*x_tilde;
+
+        //I*q <= q_dot_upper
+        //I*q >= q_dot_lower <=> -I*q <= -q_dot_lower
+        MatrixXd W_q_dot_limits(2*n, n); W_q_dot_limits << MatrixXd::Identity(n,n), -1.0*MatrixXd::Identity(n,n);
+        VectorXd w_q_dot_limits(2*n);    w_q_dot_limits << robot_->get_upper_q_dot_limit(), -1.0*robot_->get_lower_q_dot_limit();
+
+        const int& vfis_size = static_cast<int>(vfis.size());
+
+        ///Inequality constraint for VFIs
+        MatrixXd W_vfi_q(vfis_size, n);
+        for(int i=0;i<vfis_size;i++)
+        {
+            M3_VFI& vfi = vfis[i];
+            W_vfi_q.row(i) = vfi.get_vfi_matrix(x_hat, J_x_q);
+        }
+
+        MatrixXd W_q_limits;
+        VectorXd w_q_limits;
+        std::tie(W_q_limits, w_q_limits) = get_variable_boundary_inequalities(q,
+                                                                              {robot_->get_lower_q_limit(),
+                                                                               robot_->get_upper_q_limit()});
+
+        MatrixXd W_q(4*n+W_vfi_q.rows(),n);W_q << W_q_dot_limits, W_q_limits, W_vfi_q;
+        VectorXd w_q(4*n+w_vfi.size()); w_q << w_q_dot_limits, w_q_limits, vfi_gain*vfi_weight*w_vfi;
+
+        if (!using_buffered_vfis){
+            uq = task_space_solver_.solve_quadratic_program(2.0*Hx, fx, W_q, w_q, MatrixXd::Zero(0,0), VectorXd(0));
+        }else{
+            const int m = n + vfis_size;
+            MatrixXd Hx_e(m,m);
+            Hx_e <<                          Hx,                  MatrixXd::Zero(n,vfis_size),
+                MatrixXd::Zero(vfis_size,n), vfi_beta*MatrixXd::Identity(vfis_size,vfis_size);
+            VectorXd fx_e(m);
+            fx_e << fx, VectorXd::Zero(vfis_size);
+
+            // MatrixXd W_q_dot_limits_e(2*n, m);
+            // W_q_dot_limits_e << W_q_dot_limits, MatrixXd::Zero(2*n,vfis_size);
+            // MatrixXd W_q_limits_e(2*n, m);
+            // W_q_limits_e << W_q_limits, MatrixXd::Zero(2*n,vfis_size);
+            // MatrixXd W_vfi_q_e(vfis_size, m);
+            // W_vfi_q_e << W_vfi_q, -1*MatrixXd::Identity(vfis_size,vfis_size);
+            // MatrixXd W_s_limits(2*vfis_size, vfis_size);
+            // W_s_limits << MatrixXd::Identity(vfis_size,vfis_size), -1.0*MatrixXd::Identity(vfis_size,vfis_size);
+            // MatrixXd W_s_limits_e(2*vfis_size, m);
+            // W_s_limits_e <<  MatrixXd::Zero(2*vfis_size,n), W_s_limits;
+
+
+            // MatrixXd W_q_e(4*n+3*vfis_size,m);
+            // W_q_e << W_q_dot_limits_e, W_q_limits_e, W_vfi_q_e, W_s_limits_e;
+
+            MatrixXd W_q_dot_limits_e(2*m, m);
+            W_q_dot_limits_e << W_q_dot_limits.block(0,0,n,n), MatrixXd::Zero(n,vfis_size), // m.block(0,0,n,n): extracts an nxn block matrix starting at row 0 and colunm 0 of m
+                MatrixXd::Zero(vfis_size,n), MatrixXd::Zero(vfis_size,vfis_size),
+                W_q_dot_limits.block(n,0,n,n), MatrixXd::Zero(n,vfis_size),
+                MatrixXd::Zero(vfis_size,n), MatrixXd::Zero(vfis_size,vfis_size);
+            MatrixXd W_q_limits_e(2*m, m);
+            W_q_limits_e <<   W_q_limits.block(0,0,n,n), MatrixXd::Zero(n,vfis_size),
+                MatrixXd::Zero(vfis_size,n), MatrixXd::Zero(vfis_size,vfis_size),
+                W_q_limits.block(n,0,n,n), MatrixXd::Zero(n,vfis_size),
+                MatrixXd::Zero(vfis_size,n), MatrixXd::Zero(vfis_size,vfis_size);
+            MatrixXd W_vfi_q_e(2*vfis_size, m);
+            W_vfi_q_e << W_vfi_q.block(0,0,vfis_size,n),        MatrixXd::Zero(vfis_size,vfis_size),
+                MatrixXd::Zero(vfis_size,n), -1*MatrixXd::Identity(vfis_size,vfis_size);
+            MatrixXd W_s_limits_e(2*m, m);
+            W_s_limits_e <<         MatrixXd::Zero(n,n),          MatrixXd::Zero(n,vfis_size),
+                MatrixXd::Zero(vfis_size,n),      MatrixXd::Identity(vfis_size,vfis_size),
+                MatrixXd::Zero(n,n),          MatrixXd::Zero(n,vfis_size),
+                MatrixXd::Zero(vfis_size,n), -1.0*MatrixXd::Identity(vfis_size,vfis_size);
+
+            MatrixXd W_q_e(6*m+2*vfis_size,m);
+            W_q_e << W_q_dot_limits_e, W_q_limits_e, W_vfi_q_e, W_s_limits_e;
+
+            // VectorXd w_s_limits(2*vfis_size);
+            VectorXd s_max = VectorXd::Zero(vfis_size);
+            for(int i=0;i<vfis_size;i++){
+                M3_VFI& vfi = vfis[i];
+
+                const double d_tilde = vfi.get_distance_error(x_hat);
+                const double b = vfi.get_buffer_distance();
+                if (vfi.get_vfi_direction() == M3_VFI_Direction::FORBIDDEN_ZONE){
+                    s_max(i) = std::max(0.0, -vfi_gain*vfi_weight*(d_tilde - b));
+                }else if (vfi.get_vfi_direction() == M3_VFI_Direction::SAFE_ZONE){
+                    s_max(i) = std::max(0.0, vfi_gain*vfi_weight*(d_tilde + b));
+                }else{
+                    throw std::runtime_error("Expected valid VFI direction.");
+                }
+            }
+            // w_s_limits << s_max, VectorXd::Zero(vfis_size);
+            // VectorXd w_q_e(4*n+w_vfi.size()+2*vfis_size);
+            // w_q_e << w_q, w_q_limits;
+
+            VectorXd w_q_dot_limits_e(2*m);
+            w_q_dot_limits_e << w_q_dot_limits.head(n), VectorXd::Zero(vfis_size), w_q_dot_limits.tail(n), VectorXd::Zero(vfis_size);
+            VectorXd w_q_limits_e(2*m);
+            w_q_limits_e << w_q_limits.head(n), VectorXd::Zero(vfis_size), w_q_limits.tail(n), VectorXd::Zero(vfis_size);
+            VectorXd w_vfi_e(2*vfis_size);
+            w_vfi_e << vfi_gain*vfi_weight*w_vfi, VectorXd::Zero(vfis_size);
+            VectorXd w_s_limits(2*m);
+            w_s_limits << VectorXd::Zero(n), s_max, VectorXd::Zero(n), VectorXd::Zero(vfis_size);
+
+            VectorXd w_q_e(6*m+2*vfis_size);
+            w_q_e << w_q_dot_limits_e, w_q_limits_e, w_vfi_e, w_s_limits;
+
+            VectorXd uq_e = VectorXd::Zero(m);
+            uq_e = task_space_solver_.solve_quadratic_program(2.0*Hx_e, fx_e, W_q_e, w_q_e, MatrixXd::Zero(0,0), VectorXd(0));
+
+            uq = uq_e.head(n);
         }
     }
 
@@ -887,5 +893,3 @@ VectorXd M3_AdaptiveController::_smart_vec(const DQ& x, const M3_MeasureSpace& m
     }
     throw std::runtime_error("Not supposed to be reachable");
 }
-
-
